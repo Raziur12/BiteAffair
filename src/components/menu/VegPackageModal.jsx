@@ -249,8 +249,10 @@ const VegPackageModal = ({
     // Calculate total selected items
     const totalSelected = Object.values(selectedItems).reduce((total, items) => total + items.length, 0);
 
-    // Pricing: ₹499 per guest (both Standard and Premium) => total = pricePerGuest * guestCount
+    // Pricing: ₹499 per guest (both Standard and Premium)
+    // Use per-guest price as unit price; let cart multiply by quantity (guestCount)
     const { pricePerGuest, packagePrice } = getPackagePricing();
+    const quantity = guestCount;
     
     const cleanName = (item) => {
       const raw = item.title || item.name || '';
@@ -261,9 +263,11 @@ const VegPackageModal = ({
     const packageItem = {
       id: `veg_package_${Date.now()}`,
       name: packagePricing[packageType].name,
-      price: packagePrice,
-      calculatedPrice: packagePrice,
-      quantity: 1,
+      // Use per-guest pricing so cart quantity reflects guest count
+      price: pricePerGuest,
+      // Do not store total in calculatedPrice to avoid double-multiplying in CartContext
+      calculatedPrice: pricePerGuest,
+      quantity,
       serves: serves,
       guestCount: guestCount,
       isPackage: true,

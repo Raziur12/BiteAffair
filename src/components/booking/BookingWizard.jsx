@@ -65,7 +65,7 @@ const BookingWizard = ({ onComplete, onLocationSelect, initialStep = 0 }) => {
                 onClick={handleBack} 
                 aria-label="Go back" 
                 size="small"
-                sx={{ position: 'absolute', top: 2, left: 2, zIndex: 10 }}
+                sx={{ position: 'absolute', top: 12, left: 12, zIndex: 10 }}
               >
                 <ArrowBack />
               </IconButton>
