@@ -1,0 +1,836 @@
+import React, { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  Box,
+  Typography,
+  Button,
+  IconButton,
+  Divider,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Card,
+  CardMedia,
+  CardContent
+} from '@mui/material';
+import {
+  Close,
+  Add,
+  Remove,
+  Delete
+} from '@mui/icons-material';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useCart } from '../../context/CartContext';
+import { recommendedAddOns } from '../../data/servicesData';
+import OrderSuccessModal from './OrderSuccessModal';
+// import { otpService } from '../../services/otpService'; // Firebase OTP (for production)
+// import { testOtpService as otpService } from '../../services/testOtpService'; // Test OTP (for development)
+import { smsOtpService as otpService } from '../../services/smsOtpService'; // SMS OTP (real SMS)
+import { whatsappService } from '../../services/whatsappService';
+
+const CartModal = ({ open, onClose, onCheckout, bookingConfig }) => {
+  const { items, updateQuantity, removeItem, getTotalPrice } = useCart();
+  const navigate = useNavigate();
+  
+  // Use dynamic values from bookingConfig or fallback to defaults
+  const [deliveryDate, setDeliveryDate] = useState(bookingConfig?.eventDate || '15th October 2024');
+  const [deliveryTime, setDeliveryTime] = useState(bookingConfig?.eventTime || '6:00 PM - 10:30 PM');
+  const [couponCode, setCouponCode] = useState('');
+  const [location, setLocation] = useState(bookingConfig?.location || 'Gurugram');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [showOTP, setShowOTP] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  
+  // Validation error states
+  const [phoneError, setPhoneError] = useState('');
+  const [pinCodeError, setPinCodeError] = useState('');
+  
+  // OTP verification states for inline display
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otpError, setOtpError] = useState('');
+  const [resendTimer, setResendTimer] = useState(0);
+  const [canResend, setCanResend] = useState(true);
+
+  // Update state when bookingConfig changes
+  React.useEffect(() => {
+    if (bookingConfig) {
+      console.log('📅 CartModal: Received bookingConfig:', bookingConfig);
+      if (bookingConfig.eventDate) {
+        console.log('📅 Setting delivery date to:', bookingConfig.eventDate);
+        setDeliveryDate(bookingConfig.eventDate);
+      }
+      if (bookingConfig.eventTime) {
+        console.log('⏰ Setting delivery time to:', bookingConfig.eventTime);
+        setDeliveryTime(bookingConfig.eventTime);
+      }
+      if (bookingConfig.location) {
+        console.log('📍 Setting location to:', bookingConfig.location);
+        setLocation(bookingConfig.location);
+      }
+    }
+  }, [bookingConfig]);
+
+  // OTP resend timer effect
+  React.useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => {
+        setResendTimer(resendTimer - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (resendTimer === 0 && showOTP) {
+      setCanResend(true);
+    }
+  }, [resendTimer, showOTP]);
+
+  const handleQuantityChange = (id, newQuantity) => {
+    if (newQuantity <= 0) {
+      removeItem(id);
+    } else {
+      updateQuantity(id, newQuantity);
+    }
+  };
+
+  const handleSendOTP = async () => {
+    if (phoneNumber.trim()) {
+      // Validate phone number (basic validation)
+      const cleanNumber = phoneNumber.replace(/\D/g, '');
+      if (cleanNumber.length < 10) {
+        alert('Please enter a valid 10-digit phone number');
+        return;
+      }
+      
+      try {
+        console.log('Sending OTP to:', phoneNumber);
+        const result = await otpService.sendOTP(phoneNumber);
+        console.log('OTP Service Result:', result);
+        
+        if (result.success) {
+          setShowOTP(true);
+          setResendTimer(30);
+          setCanResend(false);
+          setOtp(['', '', '', '', '', '']);
+          setOtpError('');
+          
+          // Show success message if in test mode
+          if (result.testMode && result.dynamicOTP) {
+            alert(`Test OTP sent! Use code: ${result.dynamicOTP}`);
+          }
+        } else {
+          alert(result.message || 'Failed to send OTP');
+        }
+      } catch (error) {
+        console.error('OTP Send Error:', error);
+        alert('Failed to send OTP. Please try again.');
+      }
+    } else {
+      alert('Please enter phone number');
+    }
+  };
+
+  const handleSubmitValidation = () => {
+    let isValid = true;
+    
+    // Clear previous errors
+    setPhoneError('');
+    setPinCodeError('');
+
+    // Check if phone number is filled
+    if (!phoneNumber.trim()) {
+      setPhoneError('Please enter your phone number');
+      isValid = false;
+    }
+    // Check if phone number is valid (10 digits)
+    else if (phoneNumber.trim().length !== 10) {
+      setPhoneError('Please enter a valid 10-digit phone number');
+      isValid = false;
+    }
+
+    // Check if pin code is filled
+    if (!couponCode.trim()) {
+      setPinCodeError('Please enter your pin code');
+      isValid = false;
+    }
+    // Check if pin code has minimum length (assuming 6 digits)
+    else if (couponCode.trim().length < 6) {
+      setPinCodeError('Please enter a valid pin code (minimum 6 digits)');
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
+  const handleSubmit = async () => {
+    // If OTP is shown, verify OTP instead of normal validation
+    if (showOTP) {
+      const otpCode = otp.join('');
+      if (otpCode.length !== 6) {
+        setOtpError('Please enter complete 6-digit OTP');
+        return;
+      }
+
+      try {
+        const result = await otpService.verifyOTP(phoneNumber, otpCode);
+        if (result.success) {
+          setShowOTP(false);
+          setShowSuccess(true);
+        } else {
+          setOtpError(result.message || 'Invalid OTP. Please try again.');
+        }
+      } catch (error) {
+        console.error('OTP Verification Error:', error);
+        setOtpError('Failed to verify OTP. Please try again.');
+      }
+    } else {
+      // Check if phone number is entered and OTP should be sent first
+      if (phoneNumber.trim() && phoneNumber.trim().length === 10) {
+        setPhoneError('Please send OTP first and verify it before submitting');
+        return;
+      }
+      
+      // Normal validation for other fields
+      if (handleSubmitValidation()) {
+        setShowSuccess(true);
+      }
+    }
+  };
+
+  const handlePhoneNumberChange = (e) => {
+    const value = e.target.value;
+    setPhoneNumber(value);
+    if (phoneError && value.trim()) {
+      setPhoneError('');
+    }
+  };
+
+  // Clear pin code error when user starts typing
+  const handlePinCodeChange = (e) => {
+    const value = e.target.value;
+    setCouponCode(value);
+    if (pinCodeError && value.trim()) {
+      setPinCodeError('');
+    }
+  };
+
+  // Handle OTP input change
+  const handleOtpChange = (index, value) => {
+    if (value.length <= 1 && /^\d*$/.test(value)) {
+      const newOtp = [...otp];
+      newOtp[index] = value;
+      setOtp(newOtp);
+      
+      // Clear error when user starts typing
+      if (otpError && value) {
+        setOtpError('');
+      }
+      
+      // Auto focus next input
+      if (value && index < 5) {
+        const nextInput = document.getElementById(`otp-${index + 1}`);
+        if (nextInput) nextInput.focus();
+      }
+    }
+  };
+
+  // Handle resend OTP
+  const handleResendOTP = async () => {
+    if (!canResend) return;
+    
+    try {
+      const result = await otpService.sendOTP(phoneNumber);
+      if (result.success) {
+        setResendTimer(30);
+        setCanResend(false);
+        setOtp(['', '', '', '', '', '']);
+        setOtpError('');
+        
+        if (result.testMode && result.dynamicOTP) {
+          alert(`New OTP sent! Use code: ${result.dynamicOTP}`);
+        }
+      } else {
+        setOtpError('Failed to resend OTP. Please try again.');
+      }
+    } catch (error) {
+      setOtpError('Failed to resend OTP. Please try again.');
+    }
+  };
+
+  const handleOTPVerifySuccess = async () => {
+    setShowOTP(false);
+    
+    // Prepare order data for WhatsApp
+    const orderData = {
+      items: items,
+      totalPrice: getTotalPrice() + Math.round(getTotalPrice() * 0.18), // Including GST
+      deliveryDate: deliveryDate,
+      deliveryTime: deliveryTime,
+      location: location,
+      phoneNumber: phoneNumber
+    };
+    
+    // Send order details to WhatsApp
+    try {
+      const result = await whatsappService.sendOrderDetails(phoneNumber, orderData);
+      console.log('WhatsApp result:', result);
+    } catch (error) {
+      console.error('Failed to send WhatsApp message:', error);
+    }
+    
+    setShowSuccess(true);
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccess(false);
+    onClose(); // Close the cart modal as well
+  };
+
+  // Get item image with fallback
+  const getItemImage = (imagePath, itemName) => {
+    const fallbackImages = {
+      'paneer': 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
+      'chicken': 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
+      'tikka': 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
+      'default': 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80'
+    };
+
+    if (imagePath && imagePath.startsWith('http')) return imagePath;
+    if (!itemName) return fallbackImages.default;
+
+    const name = itemName.toLowerCase();
+    for (const [key, url] of Object.entries(fallbackImages)) {
+      if (name.includes(key)) return url;
+    }
+    return fallbackImages.default;
+  };
+
+  // Render as modal with new design
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth={false}
+      PaperProps={{
+        sx: {
+          borderRadius: { xs: 0, sm: 2 },
+          maxHeight: { xs: '100vh', sm: '100vh' },
+          maxWidth: { xs: '100%', sm: '400px' },
+          width: { xs: '100%', sm: '400px' },
+          margin: { xs: 0, sm: 0 },
+          position: 'fixed',
+          right: 0,
+          top: 0,
+          bottom: 0,
+          left: { xs: 0, sm: 'auto' }
+        }
+      }}
+      sx={{
+        '& .MuiDialog-container': {
+          justifyContent: 'flex-end',
+          alignItems: 'stretch',
+          margin: 0,
+          maxWidth: 'none',
+          height: '100vh'
+        },
+        '& .MuiBackdrop-root': {
+          backgroundColor: 'rgba(0, 0, 0, 0.3)'
+        }
+      }}
+    >
+      <DialogContent sx={{ p: 0, bgcolor: '#f8f9fa', height: { xs: '100vh', sm: 'auto' }, maxHeight: { xs: '100vh', sm: '90vh' }, overflowY: 'auto' }}>
+        {/* Header */}
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          p: 2,
+          bgcolor: 'white',
+          borderBottom: '1px solid #e0e0e0'
+        }}>
+          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+            Order Summary
+          </Typography>
+          <IconButton onClick={onClose} size="small">
+            <Close />
+          </IconButton>
+        </Box>
+
+        {/* Cart Items - Single Box for all items */}
+        <Box sx={{ p: 2 }}>
+          <Box sx={{ 
+            bgcolor: 'white',
+            borderRadius: 1,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            overflow: 'hidden'
+          }}>
+            {/* Dynamic Cart Items */}
+            {items.map((item, index) => (
+              <Box key={item.id}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  p: 2
+                }}>
+                  {/* Left Side - Veg Indicator and Item Details */}
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      {/* Veg/Non-Veg Indicator */}
+                      <Box
+                        sx={{
+                          width: 12,
+                          height: 12,
+                          border: '2px solid',
+                          borderColor: item.isVeg ? '#4caf50' : '#f44336',
+                          borderRadius: 0.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          bgcolor: 'white'
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: 6,
+                            height: 6,
+                            backgroundColor: item.isVeg ? '#4caf50' : '#f44336',
+                            borderRadius: '50%'
+                          }}
+                        />
+                      </Box>
+                      <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                        {item.name}
+                      </Typography>
+                    </Box>
+                    
+                    {/* Package Details or Regular Item Details */}
+                    {item.isPackage ? (
+                      <Box sx={{ mt: 1 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem', display: 'block', mb: 0.5 }}>
+                          {item.packageType === 'premium' ? 'Premium' : 'Standard'} Package - Serves: {item.serves}
+                        </Typography>
+                        {item.packageDetails && (
+                          <Box sx={{ ml: 1 }}>
+                            {Object.entries(item.packageDetails).map(([category, items]) => {
+                              if (category === 'extras' || !items || items.length === 0) return null;
+
+                              const labelMap = {
+                                starters: 'Starters',
+                                main: 'Main Course',
+                                rice: 'Rice',
+                                breads: 'Breads',
+                                dessert: 'Dessert'
+                              };
+                              const label = labelMap[category] || (category.charAt(0).toUpperCase() + category.slice(1));
+                              const count = items.length;
+
+                              return (
+                                <Typography
+                                  key={category}
+                                  variant="caption"
+                                  color="text.secondary"
+                                  sx={{ fontSize: '0.7rem', display: 'block' }}
+                                >
+                                  • {count} {label}: {items.join(', ')}
+                                </Typography>
+                              );
+                            })}
+                            {item.packageDetails.extras && (
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'block' }}>
+                                • Includes: {item.packageDetails.extras.join(', ')}
+                              </Typography>
+                            )}
+                          </Box>
+                        )}
+
+                        {/* Edit link below package summary */}
+                        <Typography 
+                          variant="caption" 
+                          onClick={() => {
+                            console.log('🛒 Edit button clicked for package:', item.name);
+                            // Close the cart and navigate to menu with a flag so PartyPlatters can reopen VegPackageModal
+                            onClose();
+                            const pkgType = item.packageType === 'premium' ? 'premium' : 'standard';
+                            navigate(`/bite-affair/menu?editVegPackage=${pkgType}`);
+                          }}
+                          sx={{ 
+                            color: '#ff6b35', 
+                            fontSize: '0.75rem', 
+                            cursor: 'pointer',
+                            mt: 0.75,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            '&:hover': { textDecoration: 'underline' }
+                          }}
+                        >
+                          Edit ▶
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem', display: 'block' }}>
+                        Serves: {(item.serves || item.customizations?.serves || 10) * item.quantity}
+                      </Typography>
+                    )}
+                  </Box>
+
+                  {/* Right Side - Quantity Controls and Price */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    {/* Quantity Controls */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid #e0e0e0', borderRadius: 1, px: 1, py: 0.5 }}>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                        sx={{ 
+                          width: 20,
+                          height: 20,
+                          p: 0
+                        }}
+                      >
+                        <Remove sx={{ fontSize: 12 }} />
+                      </IconButton>
+                      <Typography sx={{ 
+                        minWidth: '20px', 
+                        textAlign: 'center', 
+                        fontWeight: 600,
+                        fontSize: '0.875rem',
+                        mx: 1
+                      }}>
+                        {item.quantity}
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                        sx={{ 
+                          width: 20,
+                          height: 20,
+                          p: 0
+                        }}
+                      >
+                        <Add sx={{ fontSize: 12 }} />
+                      </IconButton>
+                    </Box>
+                    
+                    {/* Price */}
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1a237e', minWidth: 40 }}>
+                      ₹{(item.calculatedPrice || item.price || item.basePrice || 0) * item.quantity}
+                    </Typography>
+                  </Box>
+                </Box>
+                
+                {/* Divider between items (except last item) */}
+                {index < items.length - 1 && (
+                  <Box sx={{ borderBottom: '1px solid #f0f0f0', mx: 2 }} />
+                )}
+              </Box>
+            ))}
+            
+            {/* Empty state when no items */}
+            {items.length === 0 && (
+              <Box sx={{ p: 4, textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  Your cart is empty
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Box>
+
+        {/* Recommended Add ons */}
+        <Box sx={{ p: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
+            Recommended Add-ons
+          </Typography>
+          {recommendedAddOns.map((addon) => (
+            <Box key={addon.id} sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              mb: 2,
+              bgcolor: 'white',
+              p: 2,
+              borderRadius: 1,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+            }}>
+              <Box
+                component="img"
+                src={addon.image}
+                alt={addon.name}
+                sx={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: 1,
+                  objectFit: 'cover',
+                  mr: 2
+                }}
+              />
+              
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                  {addon.name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {addon.description}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{display: 'flex', alignItems: 'center', gap: 0.3, bgcolor: '#132561ff', color: 'white', borderRadius: 0.5, px: 0.5, py: 0.2, mt: 0.5, fontSize: '0.65rem', width: 'fit-content'}}>
+                  {addon.rating}
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 'bold', mt: 0.5 }}>
+                  ₹{addon.price}
+                </Typography>
+              </Box>
+              
+              <Button
+                variant="outlined"
+                size="small"
+                sx={{ 
+                  minWidth: 60,
+                  fontSize: '0.75rem',
+                  borderColor: '#1a237e',
+                  color: '#1a237e'
+                }}
+              >
+                Add
+              </Button>
+            </Box>
+          ))}
+        </Box>
+
+        {/* Total Section */}
+        <Box sx={{ p: 2, bgcolor: 'white', borderTop: '1px solid #e0e0e0' }}>
+          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+            Total
+          </Typography>
+          
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+            <Typography variant="body2">Sub Total</Typography>
+            <Typography variant="body2">₹{getTotalPrice()}</Typography>
+          </Box>
+          
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+            <Typography variant="body2">Delivery Charges</Typography>
+            <Typography variant="body2">₹50</Typography>
+          </Box>
+          
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+            <Typography variant="body2">Packaging Charges</Typography>
+            <Typography variant="body2">₹30</Typography>
+          </Box>
+          
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+            <Typography variant="body2">GST (Including CGST)</Typography>
+            <Typography variant="body2">₹{Math.round(getTotalPrice() * 0.05)}</Typography>
+          </Box>
+          <Divider sx={{ my: 2 }} />
+          {/* Final Total */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              Total
+            </Typography>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1a237e' }}>
+              ₹{getTotalPrice() + 50 + 30 + Math.round(getTotalPrice() * 0.05)}
+            </Typography>
+          </Box>
+          <Divider sx={{ my: 2 }} />
+          
+          {/* Delivery Date/Time */}
+          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+            <FormControl size="small" sx={{ flex: 1 }}>
+              <InputLabel>Delivery Date</InputLabel>
+              <Select
+                value={deliveryDate}
+                onChange={(e) => setDeliveryDate(e.target.value)}
+                label="Delivery Date"
+              >
+                {/* Always include the current selected date as an option */}
+                <MenuItem value={deliveryDate}>{deliveryDate}</MenuItem>
+                {deliveryDate !== "15th October 2024" && (
+                  <MenuItem value="15th October 2024">15th October 2024</MenuItem>
+                )}
+                {deliveryDate !== "16th October 2024" && (
+                  <MenuItem value="16th October 2024">16th October 2024</MenuItem>
+                )}
+              </Select>
+            </FormControl>
+            
+            <FormControl size="small" sx={{ flex: 1 }}>
+              <InputLabel>Delivery Time</InputLabel>
+              <Select
+                value={deliveryTime}
+                onChange={(e) => setDeliveryTime(e.target.value)}
+                label="Delivery Time"
+              >
+                {/* Always include the current selected time as an option */}
+                <MenuItem value={deliveryTime}>{deliveryTime}</MenuItem>
+                {deliveryTime !== "6:00 PM - 10:30 PM" && (
+                  <MenuItem value="6:00 PM - 10:30 PM">6:00 PM - 10:30 PM</MenuItem>
+                )}
+                {deliveryTime !== "12:00 PM - 4:00 PM" && (
+                  <MenuItem value="12:00 PM - 4:00 PM">12:00 PM - 4:00 PM</MenuItem>
+                )}
+              </Select>
+            </FormControl>
+          </Box>
+          
+          {/* Location and Phone Number */}
+          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+            <FormControl size="small" sx={{ flex: 1 }}>
+              <InputLabel>Location</InputLabel>
+              <Select
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                label="Location"
+              >
+                <MenuItem value="Gurugram">Gurugram</MenuItem>
+                <MenuItem value="Delhi">Delhi</MenuItem>
+                <MenuItem value="Noida">Noida</MenuItem>
+                <MenuItem value="Faridabad">Faridabad</MenuItem>
+              </Select>
+            </FormControl>
+            
+          
+            <Box sx={{ flex: 1 }}>
+              <TextField
+                size="small"
+                placeholder="Enter Pin Code"
+                value={couponCode}
+                onChange={handlePinCodeChange}
+                error={!!pinCodeError}
+                sx={{ width: '100%' }}
+              />
+              {pinCodeError && (
+                <Typography variant="caption" color="error" sx={{ fontSize: '0.75rem', mt: 0.5, display: 'block' }}>
+                  {pinCodeError}
+                </Typography>
+              )}
+            </Box>
+          </Box>
+          
+          {/* Phone Number */}
+          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+            <Box sx={{ flex: 1 }}>
+              <TextField
+                size="small"
+                placeholder="Phone Number"
+                value={phoneNumber}
+                onChange={handlePhoneNumberChange}
+                error={!!phoneError}
+                inputProps={{
+                  maxLength: 10,
+                  pattern: '[0-9]*'
+                }}
+                sx={{ width: '100%' }}
+              />
+              {phoneError && (
+                <Typography variant="caption" color="error" sx={{ fontSize: '0.75rem', mt: 0.5, display: 'block' }}>
+                  {phoneError}
+                </Typography>
+              )}
+            </Box>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={handleSendOTP}
+              sx={{ 
+                bgcolor: '#1a237e',
+                minWidth: 80,
+                '&:hover': { bgcolor: '#303f9f' },
+                height: '40px'
+              }}
+            >
+              Send OTP
+            </Button>
+          </Box>
+          
+          {/* Inline OTP Verification Section - Like 2nd Image */}
+          {showOTP && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500, textAlign: 'center' }}>
+                A verification code has been sent to {phoneNumber}
+              </Typography>
+              
+              {/* 6 OTP Input Fields - Inline like 2nd image */}
+              <Box sx={{ display: 'flex', gap: 1, mb: 1, justifyContent: 'center' }}>
+                {otp.map((digit, index) => (
+                  <TextField
+                    key={index}
+                    id={`otp-${index}`}
+                    size="small"
+                    value={digit}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    inputProps={{
+                      maxLength: 1,
+                      style: { textAlign: 'center', fontSize: '1.1rem', fontWeight: 'bold' }
+                    }}
+                    sx={{ 
+                      width: 40, 
+                      '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                          borderColor: otpError ? '#f44336' : '#e0e0e0',
+                        },
+                      }
+                    }}
+                  />
+                ))}
+              </Box>
+              
+              {/* Resend Code - Like 2nd image */}
+              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                {canResend ? (
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={handleResendOTP}
+                    sx={{ fontSize: '0.75rem', textTransform: 'none', color: '#ff6b35' }}
+                  >
+                    Resend Code
+                  </Button>
+                ) : (
+                  <Typography variant="caption" sx={{ fontSize: '0.75rem', color: '#666' }}>
+                    Resend code in {resendTimer}s
+                  </Typography>
+                )}
+              </Box>
+              
+              {/* OTP Error Message */}
+              {otpError && (
+                <Typography variant="caption" color="error" sx={{ fontSize: '0.75rem', display: 'block', textAlign: 'center', mb: 1 }}>
+                  {otpError}
+                </Typography>
+              )}
+            </Box>
+          )}
+          
+          {/* Checkout Button */}
+          <Button
+            fullWidth
+            variant="contained"
+            onClick={handleSubmit}
+            sx={{
+              bgcolor: '#1a237e',
+              py: 1.5,
+              fontSize: '1rem',
+              fontWeight: 600,
+              '&:hover': {
+                bgcolor: '#303f9f'
+              }
+            }}
+          >
+            Submit
+          </Button>
+        </Box>
+        
+        {/* reCAPTCHA container (only needed for Firebase OTP) */}
+        {/* <div id="recaptcha-container"></div> */}
+      </DialogContent>
+      
+      
+      {/* Order Success Modal */}
+      <OrderSuccessModal
+        open={showSuccess}
+        onClose={handleSuccessClose}
+      />
+    </Dialog>
+  );
+};
+
+export default CartModal;

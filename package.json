@@ -1,0 +1,51 @@
+{
+  "name": "bite-affair",
+  "version": "1.0.0",
+  "description": "Premium catering services platform for Gurugram - Party platters and event catering",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0"
+  },
+  "dependencies": {
+    "@emailjs/browser": "^4.4.1",
+    "@emotion/react": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.15.0",
+    "@mui/lab": "^5.0.0-alpha.155",
+    "@mui/material": "^5.15.0",
+    "@mui/x-date-pickers": "^8.11.2",
+    "date-fns": "^4.1.0",
+    "firebase": "^12.5.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.30.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.55.0",
+    "eslint-plugin-react": "^7.33.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.3.6",
+    "vite": "^5.0.0"
+  },
+  "keywords": [
+    "catering",
+    "food-delivery",
+    "party-platters",
+    "gurugram",
+    "react",
+    "vite",
+    "material-ui",
+    "tailwindcss"
+  ],
+  "author": "Bite Affair",
+  "license": "MIT"
+}
