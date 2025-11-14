@@ -65,14 +65,25 @@ const ItemCustomizationModal = ({
   const handleAddToCart = () => {
     if (!item) return;
     
+    // Determine serves/guest count for this item
+    const effectiveServes = item.serves || serves || getServiceCountForItem(item);
+
+    // Derive a per-guest/unit price so CartContext can do: unitPrice * quantity
+    const totalForGuests = item.calculatedPrice || item.price || item.basePrice || 0;
+    const unitPrice = effectiveServes > 0 ? Math.ceil(totalForGuests / effectiveServes) : totalForGuests;
+
     const customizedItem = {
       ...item,
       id: `${item.id}_${Date.now()}`,
-      quantity: 1, // Always start with quantity 1
-      serves: item.serves || serves, // Use calculated serves from customizationMenuService
-      calculatedQuantity: item.calculatedQuantity || item.portion_size || quantity, // Use calculated quantity
+      // Quantity reflects guest/serves count
+      quantity: effectiveServes,
+      serves: effectiveServes,
+      calculatedQuantity: item.calculatedQuantity || item.portion_size || quantity, // Use calculated quantity from services
+      // Ensure per-unit pricing so CartContext total is correct
+      price: unitPrice,
+      calculatedPrice: unitPrice,
       customizations: {
-        serves: item.serves || serves,
+        serves: effectiveServes,
         quantity: item.calculatedQuantity || item.portion_size || quantity
       }
     };

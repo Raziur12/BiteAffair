@@ -469,7 +469,10 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig }) => {
                       </Box>
                     ) : (
                       <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem', display: 'block' }}>
-                        Serves: {(item.serves || item.customizations?.serves || 10) * item.quantity}
+                        {/** For non-package items (Jain/customized), quantity already represents guest/serves count.
+                         *  Show serves equal to that count instead of multiplying again.
+                         */}
+                        Serves: {item.serves || item.customizations?.serves || item.quantity || 10}
                       </Typography>
                     )}
                   </Box>

@@ -221,7 +221,9 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
               // Calculate dynamic portion and pricing based on guest count
               const baseServes = item.serves || 5;
               const calculatedQuantity = Math.ceil((totalJainGuests / baseServes) * parseInt(item.quantity || '1'));
-              const calculatedPrice = Math.ceil(item.basePrice * (totalJainGuests / baseServes));
+              // Treat basePrice from jain-menu.js as per-person price (e.g., ₹80 per guest)
+              // so total price scales directly with Jain guest count
+              const calculatedPrice = Math.ceil(item.basePrice * totalJainGuests);
               
               // Determine portion size display
               let portionDisplay = item.portionSize;
