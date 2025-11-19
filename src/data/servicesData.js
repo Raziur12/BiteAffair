@@ -19,7 +19,7 @@ export const recommendedAddOns = [
     description: 'Refreshing dinner with premium ingredients',
     rating: '4.8 ⭐',
     price: '80',
-    image: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80'
+    image: '/src/assets/Images/AddOnsImage/RefreshedDinner.jpg'
   },
   {
     id: 'addon2', 
@@ -27,13 +27,13 @@ export const recommendedAddOns = [
     description: 'Traditional spicy chutney blend',
     rating: '4.8 ⭐',
     price: '90',
-    image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80'
+    image: '/src/assets/Images/AddOnsImage/SpicyChutney.jpg'
   }
 ];
 
 // Get services with dynamic pricing based on guest count (now using customizationMenu data)
-export const getServicesWithPricing = (guestCount = { veg: 10, nonVeg: 8, jain: 0 }) => {
-  const totalGuests = guestCount.veg + guestCount.nonVeg + (guestCount.jain || 0);
+export const getServicesWithPricing = (guestCount = { veg: 10, nonVeg: 8, jain: 1 }) => {
+  const totalGuests = guestCount.veg + guestCount.nonVeg + (guestCount.jain || 1);
   
   return servicesData.map(item => {
     // Calculate quantity needed based on serves (from customizationMenu)
@@ -45,7 +45,7 @@ export const getServicesWithPricing = (guestCount = { veg: 10, nonVeg: 8, jain: 
       quantityNeeded: quantityNeeded,
       calculatedPrice: totalPrice,
       guestCount: totalGuests,
-      portion_size: item.portionSize || item.quantity || `${quantityNeeded} ${item.unit || 'portion'}`,
+      portion_size: item.portionSize || item.quantity || `${quantityNeeded} ${item.unit || 'portions'}`,
       calculatedFor: `${totalGuests} guests`,
       priceBreakdown: {
         basePrice: item.basePrice,

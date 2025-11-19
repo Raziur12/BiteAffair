@@ -42,8 +42,8 @@ const ItemCustomizationModal = ({
     }
     // Check if item is jain
     else if (item.isJain) {
-      console.log('🌿 ItemModal - Jain item detected, using jain count:', guestCount?.jain || 0);
-      return guestCount?.jain || 0;
+      console.log('🌿 ItemModal - Jain item detected, using jain count:', guestCount?.jain || 1);
+      return guestCount?.jain || 1;
     }
     // Default to veg (includes pure veg items and items without clear classification)
     else {

@@ -14,7 +14,7 @@ class CustomizationMenuService {
   }
 
   // Get menu items by category
-  getMenuItems(category = 'all', guestCount = { veg: 10, nonVeg: 8, jain: 0 }) {
+  getMenuItems(category = 'all', guestCount = { veg: 10, nonVeg: 8, jain: 1 }) {
     const totalGuests = guestCount.veg + guestCount.nonVeg + (guestCount.jain || 0);
     
     let items = [];
@@ -73,7 +73,7 @@ class CustomizationMenuService {
   }
 
   // Get menu items by specific category (starters, main_course, breads, desserts)
-  getMenuItemsByCategory(category, menuType = 'all', guestCount = { veg: 10, nonVeg: 8, jain: 0 }) {
+  getMenuItemsByCategory(category, menuType = 'all', guestCount = { veg: 10, nonVeg: 8, jain: 1 }) {
     const allItems = this.getMenuItems(menuType, guestCount);
     return allItems.filter(item => item.category === category);
   }

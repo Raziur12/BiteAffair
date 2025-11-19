@@ -38,6 +38,7 @@ const OrderFlowManager = ({ cartOpen, onCartClose, bookingConfig }) => {
         onClose={handleCloseAll}
         onCheckout={handleCartCheckout}
         bookingConfig={bookingConfig}
+        selectedMenu={bookingConfig?.menu}
       />
 
       {/* Checkout Confirmation Modal */}

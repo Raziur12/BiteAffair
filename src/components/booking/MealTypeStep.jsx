@@ -6,9 +6,9 @@ import { Add, Remove } from '@mui/icons-material';
 const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
   const navigate = useNavigate();
   const [selectedMealType, setSelectedMealType] = useState(null);
-  const [vegCount, setVegCount] = useState(initialGuestCount || 5);
-  const [nonVegCount, setNonVegCount] = useState(initialGuestCount || 5);
-  const [jainCount, setJainCount] = useState(initialGuestCount || 17);
+  const [vegCount, setVegCount] = useState(initialGuestCount || 1);
+  const [nonVegCount, setNonVegCount] = useState(initialGuestCount || 1);
+  const [jainCount, setJainCount] = useState(initialGuestCount || 1);
 
   const mealTypes = [
     { 
@@ -39,19 +39,19 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
   };
 
   const handleVegCountChange = (amount) => {
-    const newCount = Math.max(0, vegCount + amount);
+    const newCount = Math.max(1, vegCount + amount);
     setVegCount(newCount);
     updateBookingData({ vegCount: newCount });
   };
 
   const handleNonVegCountChange = (change) => {
-    const newCount = Math.max(0, nonVegCount + change);
+    const newCount = Math.max(1, nonVegCount + change);
     setNonVegCount(newCount);
     updateBookingData({ nonVegCount: newCount });
   };
 
   const handleJainCountChange = (amount) => {
-    const newCount = Math.max(0, jainCount + amount);
+    const newCount = Math.max(1, jainCount + amount);
     setJainCount(newCount);
     updateBookingData({ jainCount: newCount });
   };
@@ -64,9 +64,9 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
     // Save the meal type and guest count data
     const mealData = {
       mealType: mealTypeName,
-      vegCount: selectedMealType === 'veg' || selectedMealType === 'veg_nonveg' ? vegCount : 0,
-      nonVegCount: selectedMealType === 'veg_nonveg' ? nonVegCount : 0,
-      jainCount: selectedMealType === 'jain' ? jainCount : 0
+      vegCount: selectedMealType === 'veg' || selectedMealType === 'veg_nonveg' ? vegCount : 1,
+      nonVegCount: selectedMealType === 'veg_nonveg' ? nonVegCount : 1,
+      jainCount: selectedMealType === 'jain' ? jainCount : 1
     };
     
     

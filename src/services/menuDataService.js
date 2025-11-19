@@ -108,7 +108,7 @@ class MenuDataService {
   }
 
   // Get menu items with dynamic calculations
-  getMenuItemsWithGuestCount(menuType, packageType = 'standard', guestCount = { veg: 10, nonVeg: 8, jain: 0 }) {
+  getMenuItemsWithGuestCount(menuType, packageType = 'standard', guestCount = { veg: 10, nonVeg: 8, jain: 1 }) {
     // Get base menu items directly from data files
     let baseMenuItems;
     switch (menuType) {
@@ -286,26 +286,26 @@ class MenuDataService {
   // Validate guest count
   validateGuestCount(guestCount) {
     if (!guestCount || typeof guestCount !== 'object') {
-      return { veg: 10, nonVeg: 8, jain: 0 };
+      return { veg: 10, nonVeg: 8, jain: 1 };
     }
 
     return {
-      veg: Math.max(0, parseInt(guestCount.veg) || 0),
-      nonVeg: Math.max(0, parseInt(guestCount.nonVeg) || 0),
-      jain: Math.max(0, parseInt(guestCount.jain) || 0)
+      veg: Math.max(1, parseInt(guestCount.veg) || 1),
+      nonVeg: Math.max(1, parseInt(guestCount.nonVeg) || 1),
+      jain: Math.max(1, parseInt(guestCount.jain) || 1)
     };
   }
 
   // Get guest count from booking config
   getGuestCountFromBooking(bookingConfig) {
     if (!bookingConfig) {
-      return { veg: 10, nonVeg: 8, jain: 0 };
+      return { veg: 10, nonVeg: 8, jain: 1 };
     }
 
     const guestCount = {
-      veg: parseInt(bookingConfig.vegGuest || bookingConfig.vegCount || 10),
-      nonVeg: parseInt(bookingConfig.nonVegGuest || bookingConfig.nonVegCount || 8),
-      jain: parseInt(bookingConfig.jainGuest || bookingConfig.jainCount || 0)
+      veg: Math.max(1, parseInt(bookingConfig.vegGuest || bookingConfig.vegCount || 10)),
+      nonVeg: Math.max(1, parseInt(bookingConfig.nonVegGuest || bookingConfig.nonVegCount || 8)),
+      jain: Math.max(1, parseInt(bookingConfig.jainGuest || bookingConfig.jainCount || 1))
     };
 
     return guestCount;

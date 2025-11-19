@@ -58,7 +58,7 @@ import { customizationMenuService } from '../../services/customizationMenuServic
 const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
   const navigate = useNavigate();
   const routerLocation = useLocation();
-  const { addItem, getItemQuantity, totalItems, items: cartItems, removeItem: removeFromCart } = useCart();
+  const { addItem, getItemQuantity, totalItems, items: cartItems, removeItem: removeFromCart, updateQuantity } = useCart();
 
 
   // State declarations - MUST be before useEffect hooks
@@ -77,7 +77,24 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
   const [menuData, setMenuData] = useState({ categories: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [guestCount, setGuestCount] = useState({ veg: 10, nonVeg: 8, jain: 0 });
+  const [guestCount, setGuestCount] = useState(() => {
+    try {
+      const stored = localStorage.getItem('biteAffair_guestCount');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed === 'object') {
+          return {
+            veg: Math.max(1, parseInt(parsed.veg) || 1),
+            nonVeg: Math.max(1, parseInt(parsed.nonVeg) || 1),
+            jain: Math.max(1, parseInt(parsed.jain) || 1)
+          };
+        }
+      }
+    } catch (e) {
+      console.warn('guestCount localStorage read failed', e);
+    }
+    return { veg: 10, nonVeg: 8, jain: 1 };
+  });
   const [selectedItem, setSelectedItem] = useState(null);
   const [customizationModalOpen, setCustomizationModalOpen] = useState(false);
   const [vegPackageModalOpen, setVegPackageModalOpen] = useState(false);
@@ -104,7 +121,7 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
     }
     // Check if item is jain
     else if (item.isJain) {
-      return parseInt(guestCount.jain || 0);
+      return parseInt(guestCount.jain || 1);
     }
     // Default to veg (includes pure veg items and items without clear classification)
     else {
@@ -116,14 +133,23 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
   useEffect(() => {
     if (bookingConfig) {
       const extractedGuestCount = {
-        veg: bookingConfig.vegCount || 10,
-        nonVeg: bookingConfig.nonVegCount || 0,
-        jain: bookingConfig.jainCount || 0
+        veg: Math.max(1, bookingConfig.vegCount || 10),
+        nonVeg: Math.max(1, bookingConfig.nonVegCount || 1),
+        jain: Math.max(1, bookingConfig.jainCount || 1)
       };
       setGuestCount(extractedGuestCount);
     } else {
     }
   }, [bookingConfig]);
+
+  // Persist guest count so it survives page refresh
+  useEffect(() => {
+    try {
+      localStorage.setItem('biteAffair_guestCount', JSON.stringify(guestCount));
+    } catch (e) {
+      console.warn('guestCount localStorage write failed', e);
+    }
+  }, [guestCount]);
 
   // Load services and testimonials data
   useEffect(() => {
@@ -227,11 +253,11 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
               
               // Determine portion size display
               let portionDisplay = item.portionSize;
-              if (item.unit === 'piece' || item.unit === 'portion') {
-                const totalPieces = Math.ceil((totalJainGuests / baseServes) * parseInt(item.quantity || '1'));
-                portionDisplay = `${totalPieces}${item.unit === 'piece' ? 'pc' : ' portions'}`;
-              } else if (item.unit === 'portion' && item.portionSize.includes('GM')) {
-                const totalWeight = Math.ceil((totalJainGuests / baseServes) * parseInt(item.quantity || '500'));
+              if (item.unit === 'PCS') {
+                const totalPieces = Math.ceil((totalJainGuests / baseServes) * parseInt(item.quantity.replace('PCS', '') || '1'));
+                portionDisplay = `${totalPieces}PCS`;
+              } else if (item.unit === 'GM') {
+                const totalWeight = Math.ceil((totalJainGuests / baseServes) * parseInt(item.quantity.replace('GM', '') || '500'));
                 portionDisplay = `${totalWeight}GM`;
               }
 
@@ -504,14 +530,21 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
         if (!matchesMenuType) return false;
       }
 
+      // Treat some categories (like breads/desserts) as neutral so they are visible
+      // for both veg and non-veg guest selections
+      const isNeutralCategory =
+        item.category === 'breads' ||
+        item.category === 'desserts' ||
+        item.category === 'dessert';
+
       // Diet filtering based on veg/non-veg radio buttons
       const matchesDiet = 
         // If no filters are selected, show all items
         (!vegFilter && !nonVegFilter) ||
         // If veg filter is selected, show only veg items
         (vegFilter && !nonVegFilter && item.isVeg) ||
-        // If non-veg filter is selected, show only non-veg items  
-        (!vegFilter && nonVegFilter && item.isNonVeg) ||
+        // If non-veg filter is selected, show only non-veg items, but keep neutral categories visible
+        (!vegFilter && nonVegFilter && (item.isNonVeg || isNeutralCategory)) ||
         // If both filters are selected, show all items
         (vegFilter && nonVegFilter);
 
@@ -615,9 +648,39 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
   const handleGuestCountChange = (type, value) => {
     setGuestCount(prev => ({
       ...prev,
-      [type]: Math.max(0, value)
+      [type]: Math.max(1, value)
     }));
   };
+
+  // Keep cart item quantities in sync with guest count for Customized, Jain, and Veg menus
+  // Only react when guestCount or selectedMenu changes, to avoid fighting
+  // with direct quantity edits done from the Order Summary.
+  useEffect(() => {
+    if (selectedMenu !== 'customized' && selectedMenu !== 'jain' && selectedMenu !== 'veg') return;
+    if (!cartItems || cartItems.length === 0) return;
+
+    cartItems.forEach((item) => {
+      // Skip addons - they should maintain their manually set quantities
+      if (item.isAddon) return;
+      
+      let idealServes;
+
+      if (selectedMenu === 'veg' && (item.isPackage || item.isPackageItem)) {
+        // For Veg menu packages, tie quantity directly to Veg guest count
+        idealServes = parseInt(guestCount.veg) || 0;
+      } else {
+        // For Customized and Jain menus, use item type (veg/non-veg/jain)
+        // to derive the correct guest bucket
+        if (item.isPackage || item.isPackageItem) return; // other packages are managed separately
+        idealServes = getServiceCountForItem(item);
+      }
+      const currentQty = parseInt(item.quantity) || 0;
+
+      if (idealServes > 0 && idealServes !== currentQty) {
+        updateQuantity(item.id, idealServes);
+      }
+    });
+  }, [guestCount, selectedMenu, updateQuantity]);
 
   // Prevent auto-scroll on services carousel
   useEffect(() => {
@@ -1032,11 +1095,11 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
                     if (selectedMenu === 'jain') {
                       setGuestCount(prev => ({ 
                         ...prev, 
-                        jain: Math.max(0, parseInt(prev.jain || prev.veg) - 1),
-                        veg: Math.max(0, parseInt(prev.jain || prev.veg) - 1)
+                        jain: Math.max(1, parseInt(prev.jain || prev.veg) - 1),
+                        veg: Math.max(1, parseInt(prev.jain || prev.veg) - 1)
                       }));
                     } else {
-                      setGuestCount(prev => ({ ...prev, veg: Math.max(0, parseInt(prev.veg) - 1) }));
+                      setGuestCount(prev => ({ ...prev, veg: Math.max(1, parseInt(prev.veg) - 1) }));
                     }
                   }}
                   sx={{ width: 20, height: 20, fontSize: '0.7rem' }}
@@ -1098,7 +1161,7 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
                 }}>
                   <IconButton
                     size="small"
-                    onClick={() => setGuestCount(prev => ({ ...prev, nonVeg: Math.max(0, parseInt(prev.nonVeg) - 1) }))}
+                    onClick={() => setGuestCount(prev => ({ ...prev, nonVeg: Math.max(1, parseInt(prev.nonVeg) - 1) }))}
                     sx={{ width: 20, height: 20, fontSize: '0.7rem' }}
                   >
                     <Remove sx={{ fontSize: 12 }} />
@@ -2214,6 +2277,10 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
           open={cartModalOpen}
           onClose={() => setCartModalOpen(false)}
           onCheckout={handleProceedToCheckout}
+          bookingConfig={bookingConfig}
+          guestCount={guestCount}
+          onGuestCountChange={handleGuestCountChange}
+          selectedMenu={selectedMenu}
         />
 
         <EnhancedCheckout

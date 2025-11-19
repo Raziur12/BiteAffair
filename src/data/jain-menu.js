@@ -12,7 +12,7 @@ export const jainMenu = [
     basePrice: 80,
     serves: 5,
     quantity: '10PCS',
-    unit: 'portion'
+    unit: 'PCS'
   },
   {
     id: 302,
@@ -26,7 +26,7 @@ export const jainMenu = [
     basePrice: 70,
     serves: 5,
     quantity: '10PCS',
-    unit: 'portion'
+    unit: 'PCS'
   },
   {
     id: 303,
@@ -40,7 +40,7 @@ export const jainMenu = [
     basePrice: 80,
     serves: 5,
     quantity: '10PCS',
-    unit: 'portion'
+    unit: 'PCS'
   },
   {
     id: 304,
@@ -54,7 +54,7 @@ export const jainMenu = [
     basePrice: 50,
     serves: 5,
     quantity: '10PCS',
-    unit: 'portion'
+    unit: 'PCS'
   },
   {
     id: 305,
@@ -68,7 +68,7 @@ export const jainMenu = [
     basePrice: 50,
     serves: 5,
     quantity: '500GM',
-    unit: 'portion'
+    unit: 'GM'
   },
   {
     id: 306,
@@ -82,7 +82,7 @@ export const jainMenu = [
     basePrice: 50,
     serves: 5,
     quantity: '10PCS',
-    unit: 'portion'
+    unit: 'PCS'
   },
   {
     id: 307,
@@ -96,7 +96,7 @@ export const jainMenu = [
     basePrice: 80,
     serves: 5,
     quantity: '10PCS',
-    unit: 'portion'
+    unit: 'PCS'
   },
   {
     id: 308,
@@ -110,7 +110,7 @@ export const jainMenu = [
     basePrice: 100,
     serves: 5,
     quantity: '10PCS',
-    unit: 'portion'
+    unit: 'PCS'
   },
   {
     id: 309,
@@ -124,7 +124,7 @@ export const jainMenu = [
     basePrice: 110,
     serves: 5,
     quantity: '10PCS',
-    unit: 'portion'
+    unit: 'PCS'
   },
   {
     id: 310,
@@ -138,7 +138,7 @@ export const jainMenu = [
     basePrice: 80,
     serves: 5,
     quantity: '10PCS',
-    unit: 'portion'
+    unit: 'PCS'
   },
   // {
   //   id: 311,
@@ -237,8 +237,8 @@ export const jainMenu = [
     pricePerPortion: '₹100',
     basePrice: 100,
     serves: 5,
-    quantity: '500',
-    unit: 'portion'
+    quantity: '500GM',
+    unit: 'GM'
   },
   {
     id: 322,
@@ -251,8 +251,8 @@ export const jainMenu = [
     pricePerPortion: '₹100',
     basePrice: 100,
     serves: 5,
-    quantity: '500',
-    unit: 'portion'
+    quantity: '500GM',
+    unit: 'GM'
   },
   {
     id: 323,
@@ -265,8 +265,8 @@ export const jainMenu = [
     pricePerPortion: '₹100',
     basePrice: 100,
     serves: 5,
-    quantity: '500',
-    unit: 'portion'
+    quantity: '500GM',
+    unit: 'GM'
   },
   {
     id: 324,
@@ -279,8 +279,8 @@ export const jainMenu = [
     pricePerPortion: '₹100',
     basePrice: 100,
     serves: 5,
-    quantity: '500',
-    unit: 'portion'
+    quantity: '500GM',
+    unit: 'GM'
   },
   {
     id: 325,
@@ -294,7 +294,7 @@ export const jainMenu = [
     basePrice: 110,
     serves: 5,
     quantity: '500',
-    unit: 'portion'
+    unit: 'PCS'
   },
   {
     id: 326,
@@ -307,8 +307,8 @@ export const jainMenu = [
     pricePerPortion: '₹100',
     basePrice: 100,
     serves: 5,
-    quantity: '500',
-    unit: 'portion'
+    quantity: '500GM',
+    unit: 'GM'
   },
   {
     id: 327,
@@ -322,7 +322,7 @@ export const jainMenu = [
     basePrice: 120,
     serves: 5,
     quantity: '500',
-    unit: 'portion'
+    unit: 'PCS'
   },
   {
     id: 328,
@@ -335,8 +335,8 @@ export const jainMenu = [
     pricePerPortion: '₹90',
     basePrice: 90,
     serves: 5,
-    quantity: '375',
-    unit: 'portion'
+    quantity: '375GM',
+    unit: 'GM'
   },
   {
     id: 329,
@@ -349,8 +349,8 @@ export const jainMenu = [
     pricePerPortion: '₹90',
     basePrice: 90,
     serves: 5,
-    quantity: '375',
-    unit: 'portion'
+    quantity: '375GM',
+    unit: 'GM'
   },
   {
     id: 330,
@@ -363,8 +363,8 @@ export const jainMenu = [
     pricePerPortion: '₹90',
     basePrice: 90,
     serves: 5,
-    quantity: '375',
-    unit: 'portion'
+    quantity: '375GM',
+    unit: 'GM'
   },
   {
     id: 331,
@@ -377,8 +377,8 @@ export const jainMenu = [
     pricePerPortion: '₹90',
     basePrice: 90,
     serves: 5,
-    quantity: '375',
-    unit: 'portion'
+    quantity: '375GM',
+    unit: 'GM'
   },
   // {
   //   id: 332,
@@ -603,8 +603,8 @@ export const jainMenu = [
     pricePerPortion: '₹20',
     basePrice: 20,
     serves: 5,
-    quantity: '5',
-    unit: 'piece'
+    quantity: '5PCS',
+    unit: 'PCS'
   },
   {
     id: 352,
@@ -617,8 +617,8 @@ export const jainMenu = [
     pricePerPortion: '₹18',
     basePrice: 18,
     serves: 5,
-    quantity: '10',
-    unit: 'piece'
+    quantity: '10PCS',
+    unit: 'PCS'
   },
   {
     id: 353,
@@ -631,8 +631,8 @@ export const jainMenu = [
     pricePerPortion: '₹40',
     basePrice: 40,
     serves: 5,
-    quantity: '5',
-    unit: 'piece'
+    quantity: '5PCS',
+    unit: 'PCS'
   },
   {
     id: 354,
@@ -645,8 +645,8 @@ export const jainMenu = [
     pricePerPortion: '₹30',
     basePrice: 30,
     serves: 5,
-    quantity: '5',
-    unit: 'piece'
+    quantity: '5PCS',
+    unit: 'PCS'
   },
   {
     id: 355,
@@ -659,8 +659,8 @@ export const jainMenu = [
     pricePerPortion: '₹30',
     basePrice: 30,
     serves: 5,
-    quantity: '5',
-    unit: 'piece'
+    quantity: '5PCS',
+    unit: 'PCS'
   },
   {
     id: 371,
@@ -673,8 +673,8 @@ export const jainMenu = [
     pricePerPortion: '₹60',
     basePrice: 60,
     serves: 5,
-    quantity: '500',
-    unit: 'portion'
+    quantity: '500GM',
+    unit: 'GM'
   },
   {
     id: 372,
@@ -687,8 +687,8 @@ export const jainMenu = [
     pricePerPortion: '₹50',
     basePrice: 50,
     serves: 5,
-    quantity: '500',
-    unit: 'portion'
+    quantity: '500GM',
+    unit: 'GM'
   },
 
   // ===== DESSERTS =====
@@ -703,8 +703,8 @@ export const jainMenu = [
     pricePerPortion: '₹60',
     basePrice: 60,
     serves: 5,
-    quantity: '10',
-    unit: 'piece'
+    quantity: '10PCS',
+    unit: 'PCS'
   },
   {
     id: 362,
@@ -717,8 +717,8 @@ export const jainMenu = [
     pricePerPortion: '₹60',
     basePrice: 60,
     serves: 5,
-    quantity: '10',
-    unit: 'piece'
+    quantity: '10PCS',
+    unit: 'PCS'
   },
   {
     id: 363,
@@ -731,8 +731,8 @@ export const jainMenu = [
     pricePerPortion: '₹60',
     basePrice: 60,
     serves: 5,
-    quantity: '500',
-    unit: 'portion'
+    quantity: '500GM',
+    unit: 'GM'
   },
   {
     id: 364,
@@ -745,8 +745,8 @@ export const jainMenu = [
     pricePerPortion: '₹60',
     basePrice: 60,
     serves: 5,
-    quantity: '7.5',
-    unit: 'piece'
+    quantity: '7.5PCS',
+    unit: 'PCS'
   },
   {
     id: 365,
@@ -759,8 +759,8 @@ export const jainMenu = [
     pricePerPortion: '₹60',
     basePrice: 60,
     serves: 5,
-    quantity: '500',
-    unit: 'portion'
+    quantity: '500GM',
+    unit: 'GM'
   },
 
 ];

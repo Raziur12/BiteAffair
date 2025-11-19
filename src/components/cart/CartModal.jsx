@@ -30,9 +30,10 @@ import OrderSuccessModal from './OrderSuccessModal';
 // import { testOtpService as otpService } from '../../services/testOtpService'; // Test OTP (for development)
 import { smsOtpService as otpService } from '../../services/smsOtpService'; // SMS OTP (real SMS)
 import { whatsappService } from '../../services/whatsappService';
+import { locationService } from '../../services/locationService';
 
-const CartModal = ({ open, onClose, onCheckout, bookingConfig }) => {
-  const { items, updateQuantity, removeItem, getTotalPrice } = useCart();
+const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGuestCountChange, selectedMenu }) => {
+  const { items, updateQuantity, removeItem, getTotalPrice, addItem } = useCart();
   const navigate = useNavigate();
   
   // Use dynamic values from bookingConfig or fallback to defaults
@@ -86,10 +87,34 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig }) => {
   }, [resendTimer, showOTP]);
 
   const handleQuantityChange = (id, newQuantity) => {
+    // Find the item so we can infer which guest bucket (veg/non-veg/jain) it belongs to
+    const item = items.find(i => i.id === id);
+
+    const previousQuantity = item ? item.quantity : 0;
+    const delta = newQuantity - previousQuantity;
+
     if (newQuantity <= 0) {
       removeItem(id);
     } else {
       updateQuantity(id, newQuantity);
+    }
+
+    // Optionally propagate quantity changes back to shared guestCount
+    // Skip guest count propagation for addons
+    if (!item || !guestCount || !onGuestCountChange || delta === 0 || item.isAddon) return;
+
+    const safeParse = (value) => parseInt(value, 10) || 0;
+
+    // Veg packages and normal veg items both map to the veg guest bucket
+    if (item.isNonVeg) {
+      const current = safeParse(guestCount.nonVeg);
+      onGuestCountChange('nonVeg', Math.max(1, current + delta));
+    } else if (item.isJain) {
+      const current = safeParse(guestCount.jain);
+      onGuestCountChange('jain', Math.max(1, current + delta));
+    } else {
+      const current = safeParse(guestCount.veg);
+      onGuestCountChange('veg', Math.max(1, current + delta));
     }
   };
 
@@ -281,6 +306,25 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig }) => {
     setShowSuccess(true);
   };
 
+  // Handle adding recommended add-ons to cart
+  const handleAddAddonToCart = (addon) => {
+    if (!addon) return;
+
+    const addonId = `addon_${addon.id}`;
+
+    const addonItem = {
+      id: addonId,
+      name: addon.name,
+      price: addon.price,
+      calculatedPrice: addon.price,
+      quantity: 1,
+      isAddon: true,
+      isVeg: true
+    };
+
+    addItem(addonItem);
+  };
+
   const handleSuccessClose = () => {
     setShowSuccess(false);
     onClose(); // Close the cart modal as well
@@ -468,12 +512,38 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig }) => {
                         </Typography>
                       </Box>
                     ) : (
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem', display: 'block' }}>
-                        {/** For non-package items (Jain/customized), quantity already represents guest/serves count.
-                         *  Show serves equal to that count instead of multiplying again.
-                         */}
-                        Serves: {item.serves || item.customizations?.serves || item.quantity || 10}
-                      </Typography>
+                      <Box sx={{ mt: 0.5 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem', display: 'block' }}>
+                          {/** For non-package items (Jain/customized), quantity already represents guest/serves count.
+                           *  Show serves equal to that count instead of multiplying again.
+                           *  Prioritize quantity so updates in cart stay in sync with the label.
+                           */}
+                          Serves: {item.isAddon ? item.quantity : (item.quantity || item.serves || item.customizations?.serves || 10)}
+                        </Typography>
+
+                        {/* Edit link for Jain/Customized items (non-package) */}
+                        {!item.isAddon && (
+                          <Typography
+                            variant="caption"
+                            onClick={() => {
+                              // Close cart and go back to menu so user can modify selections
+                              onClose();
+                              navigate('/bite-affair/menu');
+                            }}
+                            sx={{
+                              color: '#ff6b35',
+                              fontSize: '0.75rem',
+                              cursor: 'pointer',
+                              mt: 0.25,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              '&:hover': { textDecoration: 'underline' }
+                            }}
+                          >
+                            Edit ▶
+                          </Typography>
+                        )}
+                      </Box>
                     )}
                   </Box>
 
@@ -527,7 +597,30 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig }) => {
                 )}
               </Box>
             ))}
-            
+             {/* Add More Items action - only for Customized and Jain menus */}
+        {(selectedMenu === 'customized' || selectedMenu === 'jain') && (
+          <Box sx={{ px: 2, pb: 0 }}>
+            <Typography
+              variant="body2"
+              onClick={() => {
+                onClose();
+                navigate('/bite-affair/menu');
+              }}
+              sx={{
+                color: '#ff6b35',
+                fontWeight: 500,
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                mb: 1,
+                '&:hover': { textDecoration: 'underline' }
+              }}
+            >
+              + Add More Items
+            </Typography>
+          </Box>
+        )}
             {/* Empty state when no items */}
             {items.length === 0 && (
               <Box sx={{ p: 4, textAlign: 'center' }}>
@@ -537,6 +630,7 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig }) => {
               </Box>
             )}
           </Box>
+          
         </Box>
 
         {/* Recommended Add ons */}
@@ -559,8 +653,8 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig }) => {
                 src={addon.image}
                 alt={addon.name}
                 sx={{
-                  width: 50,
-                  height: 50,
+                  width: 120,
+                  height: 120,
                   borderRadius: 1,
                   objectFit: 'cover',
                   mr: 2
@@ -568,16 +662,16 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig }) => {
               />
               
               <Box sx={{ flex: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.2 }}>
                   {addon.name}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" sx={{ mb: 0.2, lineHeight: 1 }}>
                   {addon.description}
                 </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{display: 'flex', alignItems: 'center', gap: 0.3, bgcolor: '#132561ff', color: 'white', borderRadius: 0.5, px: 0.5, py: 0.2, mt: 0.5, fontSize: '0.65rem', width: 'fit-content'}}>
+                <Typography variant="caption" color="text.secondary" sx={{display: 'flex', alignItems: 'center', gap: 0.3, bgcolor: '#132561ff', color: 'white', borderRadius: 0.5, px: 0.5, py: 0.2, mt: 2, mb: 0.2, fontSize: '0.65rem', width: 'fit-content'}}>
                   {addon.rating}
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 'bold', mt: 0.5 }}>
+                <Typography variant="body2" sx={{ fontWeight: 'bold', mt: 1 }}>
                   ₹{addon.price}
                 </Typography>
               </Box>
@@ -585,6 +679,7 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig }) => {
               <Button
                 variant="outlined"
                 size="small"
+                onClick={() => handleAddAddonToCart(addon)}
                 sx={{ 
                   minWidth: 60,
                   fontSize: '0.75rem',
@@ -683,10 +778,11 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig }) => {
                 onChange={(e) => setLocation(e.target.value)}
                 label="Location"
               >
-                <MenuItem value="Gurugram">Gurugram</MenuItem>
-                <MenuItem value="Delhi">Delhi</MenuItem>
-                <MenuItem value="Noida">Noida</MenuItem>
-                <MenuItem value="Faridabad">Faridabad</MenuItem>
+                {locationService.getAvailableLocations().map((loc) => (
+                  <MenuItem key={loc.id} value={loc.name}>
+                    {loc.name}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
             
