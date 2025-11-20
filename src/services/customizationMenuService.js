@@ -41,9 +41,16 @@ class CustomizationMenuService {
       const isVegItem = vegMenu.some(vegItem => vegItem.id === item.id);
       const isNonVegItem = nonVegMenu.some(nonVegItem => nonVegItem.id === item.id);
       
-      // Use specific guest count based on item type
+      // Use specific guest count based on item type and category
       let itemGuestCount = totalGuests;
-      if (isVegItem) {
+      
+      // For Breads and Desserts, always use total guest count (veg + nonveg)
+      // because both veg and nonveg people eat breads and desserts
+      if (item.category === 'breads' || item.category === 'desserts') {
+        itemGuestCount = totalGuests;
+      }
+      // For Starters and Main Course, use specific guest type count
+      else if (isVegItem) {
         itemGuestCount = guestCount.veg || 0;
       } else if (isNonVegItem) {
         itemGuestCount = guestCount.nonVeg || 0;

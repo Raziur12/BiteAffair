@@ -330,24 +330,6 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
     onClose(); // Close the cart modal as well
   };
 
-  // Get item image with fallback
-  const getItemImage = (imagePath, itemName) => {
-    const fallbackImages = {
-      'paneer': 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      'chicken': 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      'tikka': 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      'default': 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80'
-    };
-
-    if (imagePath && imagePath.startsWith('http')) return imagePath;
-    if (!itemName) return fallbackImages.default;
-
-    const name = itemName.toLowerCase();
-    for (const [key, url] of Object.entries(fallbackImages)) {
-      if (name.includes(key)) return url;
-    }
-    return fallbackImages.default;
-  };
 
   // Render as modal with new design
   return (
@@ -513,12 +495,8 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
                       </Box>
                     ) : (
                       <Box sx={{ mt: 0.5 }}>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem', display: 'block' }}>
-                          {/** For non-package items (Jain/customized), quantity already represents guest/serves count.
-                           *  Show serves equal to that count instead of multiplying again.
-                           *  Prioritize quantity so updates in cart stay in sync with the label.
-                           */}
-                          Serves: {item.isAddon ? item.quantity : (item.quantity || item.serves || item.customizations?.serves || 10)}
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                          Serves: {item.isAddon ? item.quantity : (item.quantity || item.serves || item.customizations?.serves || 10)} | Quantity: {item.isAddon ? item.quantity : (item.portion_size || item.customizations?.quantity || 1)}
                         </Typography>
 
                         {/* Edit link for Jain/Customized items (non-package) */}
@@ -534,9 +512,8 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
                               color: '#ff6b35',
                               fontSize: '0.75rem',
                               cursor: 'pointer',
-                              mt: 0.25,
-                              display: 'inline-flex',
-                              alignItems: 'center',
+                              mt: 0.5,
+                              display: 'block',
                               '&:hover': { textDecoration: 'underline' }
                             }}
                           >
