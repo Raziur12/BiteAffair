@@ -601,7 +601,15 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
   // Handle adding item to cart
   const handleAddToCart = (item) => {
     if (selectedMenu === 'veg') {
-      // For Veg menu, open package customization modal with pre-selected item
+      // For Veg menu, detect package type from item and set vegMenuType accordingly
+      console.log('🎯 handleAddToCart: Item:', item.title, 'PackageType:', item.packageType, 'Current vegMenuType:', vegMenuType);
+      if (item.packageType) {
+        console.log('🎯 Setting vegMenuType to:', item.packageType);
+        setVegMenuType(item.packageType);
+      } else {
+        console.log('⚠️ Item has no packageType, keeping current vegMenuType:', vegMenuType);
+      }
+      // Open package customization modal with pre-selected item
       setSelectedItem(item);
       setVegPackageModalOpen(true);
     } else {
@@ -1668,7 +1676,11 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
                                     size="small"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      // For Veg menu, open package customization modal
+                                      // For Veg menu, detect package type and open package customization modal
+                                      if (item.packageType) {
+                                        console.log('🎯 Setting vegMenuType to:', item.packageType);
+                                        setVegMenuType(item.packageType);
+                                      }
                                       setSelectedItem(item);
                                       setVegPackageModalOpen(true);
                                     }}
@@ -1860,7 +1872,11 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     if (selectedMenu === 'veg') {
-                                      // For Veg menu, open package customization modal
+                                      // For Veg menu, detect package type and open package customization modal
+                                      if (item.packageType) {
+                                        console.log('🎯 Setting vegMenuType to:', item.packageType);
+                                        setVegMenuType(item.packageType);
+                                      }
                                       setSelectedItem(item);
                                       setVegPackageModalOpen(true);
                                     } else {

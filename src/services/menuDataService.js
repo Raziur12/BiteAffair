@@ -136,7 +136,7 @@ class MenuDataService {
     // Process different menu structures
     if (Array.isArray(baseMenuItems)) {
       // Handle flat array structure (like packages menu)
-      return baseMenuItems.map(item => this.enhanceItemWithGuestCount(item, guestCount));
+      return baseMenuItems.map(item => this.enhanceItemWithGuestCount(item, guestCount, packageType));
     } else if (baseMenuItems.categories) {
       // Handle categorized structure
       return {
@@ -187,7 +187,7 @@ class MenuDataService {
   }
 
   // Enhance individual item with guest count calculations
-  enhanceItemWithGuestCount(item, guestCount) {
+  enhanceItemWithGuestCount(item, guestCount, packageType = 'standard') {
     if (!item) return item;
     
     // Handle string items by converting to object
@@ -223,6 +223,7 @@ class MenuDataService {
       name: cleanName, // Use cleaned name without portion and price info
       isVeg: isVeg,
       isNonVeg: isNonVeg,
+      packageType: packageType, // Add package type for veg menu items
       portion_size: this.calculatePortionSize(cleanName, category, guestCount, itemType),
       price: this.calculatePrice(cleanName, category, guestCount),
       guestCount: guestCount,

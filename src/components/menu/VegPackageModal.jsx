@@ -31,6 +31,15 @@ const VegPackageModal = ({
 }) => {
   // Package type state (Standard/Premium)
   const [packageType, setPackageType] = useState(initialPackageType);
+  
+  // Sync internal packageType state with prop changes
+  useEffect(() => {
+    console.log('🔄 VegPackageModal: Prop initialPackageType:', initialPackageType, 'Current state packageType:', packageType);
+    if (initialPackageType !== packageType) {
+      console.log('🔄 VegPackageModal: Updating packageType from', packageType, 'to', initialPackageType);
+      setPackageType(initialPackageType);
+    }
+  }, [initialPackageType]);
   // Package limits based on your spreadsheet
   const packageLimits = {
     starters: 3,
