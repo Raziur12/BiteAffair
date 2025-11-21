@@ -25,6 +25,7 @@ const VegPackageModal = ({
   packageType: initialPackageType = 'standard', 
   menuItems = [], 
   onAddToCart,
+  onRemoveFromCart,
   guestCount = 20,
   preSelectedItem = null
 }) => {
@@ -103,6 +104,13 @@ const VegPackageModal = ({
     dessert: []
   });
 
+  // Item quantities state for increment/decrement functionality
+  const [itemQuantities, setItemQuantities] = useState({});
+
+  // Track if we're editing an existing package
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingItemId, setEditingItemId] = useState(null);
+
   // Serves count - should match guest count
   const [serves, setServes] = useState(guestCount);
   
@@ -151,6 +159,80 @@ const VegPackageModal = ({
     }
   }, [open, preSelectedItem]);
 
+  // Handle editing package from cart
+  useEffect(() => {
+    if (open) {
+      try {
+        const editingPackageData = sessionStorage.getItem('editingPackage');
+        if (editingPackageData) {
+          const packageData = JSON.parse(editingPackageData);
+          console.log('🔄 Restoring package data for editing:', packageData);
+          
+          // Try to restore selected items from multiple possible sources
+          let restoredItems = null;
+          
+          if (packageData.selectedItems && Object.keys(packageData.selectedItems).length > 0) {
+            console.log('✅ Using selectedItems from package data');
+            restoredItems = packageData.selectedItems;
+          } else if (packageData.packageDetails) {
+            console.log('✅ Converting packageDetails to selectedItems format');
+            // Convert packageDetails back to selectedItems format
+            // We need to find the actual items from the menu data
+            const menuItems = getPackageMenuItems();
+            restoredItems = {
+              starters: [],
+              main: [],
+              rice: [],
+              breads: [],
+              dessert: []
+            };
+            
+            // Match items by name
+            Object.keys(packageData.packageDetails).forEach(category => {
+              if (category === 'extras') return; // Skip extras
+              
+              const categoryItems = packageData.packageDetails[category] || [];
+              const menuCategoryItems = menuItems[category] || [];
+              
+              categoryItems.forEach(itemName => {
+                const foundItem = menuCategoryItems.find(menuItem => {
+                  const cleanMenuName = (menuItem.title || menuItem.name || '').replace(/\s*\(([^)]*(pc|pcs|kg|gm|g|PCS|KG|GM)[^)]*)\)\s*/gi, ' ').trim();
+                  return cleanMenuName === itemName || (menuItem.title || menuItem.name || '') === itemName;
+                });
+                
+                if (foundItem) {
+                  restoredItems[category].push(foundItem);
+                  console.log(`✅ Restored ${category} item:`, foundItem.title || foundItem.name);
+                } else {
+                  console.warn(`❌ Could not find menu item for: ${itemName} in category: ${category}`);
+                }
+              });
+            });
+          }
+          
+          if (restoredItems) {
+            console.log('🔄 Setting restored items:', restoredItems);
+            // Add a small delay to ensure the modal and menu items are fully rendered
+            setTimeout(() => {
+              setSelectedItems(restoredItems);
+              setIsEditing(true);
+              setEditingItemId(packageData.fullItem?.id);
+              console.log('✅ Restored items applied with delay');
+              console.log('✅ Set editing mode with item ID:', packageData.fullItem?.id);
+            }, 200);
+          } else {
+            console.warn('❌ No valid package data found for restoration');
+          }
+          
+          // Clear the sessionStorage after using it
+          sessionStorage.removeItem('editingPackage');
+        }
+      } catch (error) {
+        console.error('Error restoring package data:', error);
+      }
+    }
+  }, [open]);
+
   // Reset selected items when modal closes or package type changes
   useEffect(() => {
     if (!open) {
@@ -161,19 +243,25 @@ const VegPackageModal = ({
         breads: [],
         dessert: []
       });
+      // Reset editing state when modal closes
+      setIsEditing(false);
+      setEditingItemId(null);
     }
   }, [open]);
 
-  // Reset selections when package type changes
+  // Reset selections when package type changes (but preserve if editing)
   useEffect(() => {
-    setSelectedItems({
-      starters: [],
-      main: [],
-      rice: [],
-      breads: [],
-      dessert: []
-    });
-  }, [packageType]);
+    // Only reset if not editing (no preSelectedItem) or if modal is not open
+    if (!preSelectedItem || !open) {
+      setSelectedItems({
+        starters: [],
+        main: [],
+        rice: [],
+        breads: [],
+        dessert: []
+      });
+    }
+  }, [packageType, preSelectedItem, open]);
 
   // Get items by category from package menu data
   const itemsByCategory = getPackageMenuItems();
@@ -232,6 +320,56 @@ const VegPackageModal = ({
     return getRemainingSlots(category) === 0;
   };
 
+  // Initialize item quantity
+  const getItemQuantity = (item) => {
+    const key = `${item.id}_${item.category}`;
+    if (itemQuantities[key]) {
+      return itemQuantities[key];
+    }
+    // Parse the scaled quantity or fallback to original quantity
+    const quantityStr = item.scaledQuantity || item.quantity || '1pc';
+    const match = quantityStr.match(/(\d+\.?\d*)/);
+    return match ? parseFloat(match[1]) : 1;
+  };
+
+  // Update item quantity
+  const updateItemQuantity = (item, newQuantity) => {
+    const key = `${item.id}_${item.category}`;
+    setItemQuantities(prev => ({
+      ...prev,
+      [key]: Math.max(1, newQuantity)
+    }));
+  };
+
+  // Handle quantity increment
+  const handleQuantityIncrement = (item) => {
+    const currentQty = getItemQuantity(item);
+    updateItemQuantity(item, currentQty + 1);
+  };
+
+  // Handle quantity decrement
+  const handleQuantityDecrement = (item) => {
+    const currentQty = getItemQuantity(item);
+    if (currentQty > 1) {
+      updateItemQuantity(item, currentQty - 1);
+    }
+  };
+
+  // Get display quantity for item
+  const getDisplayQuantity = (item) => {
+    const quantity = getItemQuantity(item);
+    const originalQuantity = item.scaledQuantity || item.quantity || '1pc';
+    
+    // Determine unit from original quantity
+    if (originalQuantity.includes('kg')) {
+      return `${quantity.toFixed(1)}kg`;
+    } else if (originalQuantity.includes('pc')) {
+      return `${Math.round(quantity)}pc`;
+    } else {
+      return `${Math.round(quantity)}pc`;
+    }
+  };
+
   // Get total selected items count
   const getTotalSelectedCount = () => {
     return Object.values(selectedItems).reduce((total, items) => total + items.length, 0);
@@ -261,7 +399,7 @@ const VegPackageModal = ({
     };
 
     const packageItem = {
-      id: `veg_package_${Date.now()}`,
+      id: isEditing ? editingItemId : `veg_package_${Date.now()}`,
       name: packagePricing[packageType].name,
       // Use per-guest pricing so cart quantity reflects guest count
       price: pricePerGuest,
@@ -289,9 +427,18 @@ const VegPackageModal = ({
         packagePrice: packagePrice,
         guestCount: guestCount,
         pricePerGuest: pricePerGuest
-      }
+      },
+      // Add editing metadata
+      isEditing: isEditing,
+      originalId: isEditing ? editingItemId : null
     };
 
+    // If editing, remove the old item first
+    if (isEditing && editingItemId && onRemoveFromCart) {
+      console.log('🗑️ Removing old package item:', editingItemId);
+      onRemoveFromCart(editingItemId);
+    }
+    
     onAddToCart(packageItem);
     onClose();
   };
@@ -304,9 +451,9 @@ const VegPackageModal = ({
     });
   };
 
-  // Reset selections when modal opens
+  // Reset selections when modal opens (but not if there's a preSelectedItem)
   useEffect(() => {
-    if (open) {
+    if (open && !preSelectedItem) {
       setSelectedItems({
         starters: [],
         main: [],
@@ -315,7 +462,7 @@ const VegPackageModal = ({
         dessert: []
       });
     }
-  }, [open]);
+  }, [open, preSelectedItem]);
 
   return (
     <Dialog
@@ -467,9 +614,7 @@ const VegPackageModal = ({
                       height: '32px',
                       '&:hover': { bgcolor: '#f5f5f5' }
                     }}
-                    onClick={() => {
-                      // Handle decrement logic for starters
-                    }}
+                    onClick={() => handleQuantityDecrement(item)}
                   >
                     <Remove sx={{ fontSize: 14 }} />
                   </IconButton>
@@ -481,7 +626,7 @@ const VegPackageModal = ({
                     fontSize: '0.8rem',
                     fontWeight: 'bold'
                   }}>
-                    {item.scaledQuantity || item.quantity}
+                    {getDisplayQuantity(item)}
                   </Box>
                   <IconButton 
                     size="small" 
@@ -491,9 +636,7 @@ const VegPackageModal = ({
                       height: '32px',
                       '&:hover': { bgcolor: '#f5f5f5' }
                     }}
-                    onClick={() => {
-                      // Handle increment logic for starters
-                    }}
+                    onClick={() => handleQuantityIncrement(item)}
                   >
                     <Add sx={{ fontSize: 14 }} />
                   </IconButton>
@@ -571,9 +714,7 @@ const VegPackageModal = ({
                       height: '32px',
                       '&:hover': { bgcolor: '#f5f5f5' }
                     }}
-                    onClick={() => {
-                      // Handle decrement logic for main course
-                    }}
+                    onClick={() => handleQuantityDecrement(item)}
                   >
                     <Remove sx={{ fontSize: 14 }} />
                   </IconButton>
@@ -585,7 +726,7 @@ const VegPackageModal = ({
                     fontSize: '0.8rem',
                     fontWeight: 'bold'
                   }}>
-                    {item.scaledQuantity || item.quantity}
+                    {getDisplayQuantity(item)}
                   </Box>
                   <IconButton 
                     size="small" 
@@ -595,9 +736,7 @@ const VegPackageModal = ({
                       height: '32px',
                       '&:hover': { bgcolor: '#f5f5f5' }
                     }}
-                    onClick={() => {
-                      // Handle increment logic for main course
-                    }}
+                    onClick={() => handleQuantityIncrement(item)}
                   >
                     <Add sx={{ fontSize: 14 }} />
                   </IconButton>

@@ -475,9 +475,20 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
                           variant="caption" 
                           onClick={() => {
                             console.log('🛒 Edit button clicked for package:', item.name);
-                            // Close the cart and navigate to menu with a flag so PartyPlatters can reopen VegPackageModal
+                            console.log('🛒 Full item data:', item);
+                            console.log('🛒 Selected items:', item.selectedItems);
+                            console.log('🛒 Package details:', item.packageDetails);
+                            // Close the cart and navigate to menu with package data for editing
                             onClose();
                             const pkgType = item.packageType === 'premium' ? 'premium' : 'standard';
+                            // Store package data in sessionStorage for editing
+                            sessionStorage.setItem('editingPackage', JSON.stringify({
+                              packageType: pkgType,
+                              selectedItems: item.selectedItems,
+                              packageDetails: item.packageDetails,
+                              guestCount: item.guestCount || item.quantity,
+                              fullItem: item
+                            }));
                             navigate(`/bite-affair/menu?editVegPackage=${pkgType}`);
                           }}
                           sx={{ 

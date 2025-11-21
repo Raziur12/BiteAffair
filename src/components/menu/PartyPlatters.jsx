@@ -2233,6 +2233,7 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
           packageType={vegMenuType}
           menuItems={filteredAndSortedItems || []}
           onAddToCart={handleCustomizedItemAdd}
+          onRemoveFromCart={removeFromCart}
           guestCount={guestCount.veg || 20}
           preSelectedItem={selectedItem}
         />
