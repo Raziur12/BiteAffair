@@ -6,8 +6,10 @@ import { Add, Remove } from '@mui/icons-material';
 const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
   const navigate = useNavigate();
   const [selectedMealType, setSelectedMealType] = useState(null);
-  const [vegCount, setVegCount] = useState(initialGuestCount || 1);
-  const [nonVegCount, setNonVegCount] = useState(initialGuestCount || 1);
+  // Separate count states for each meal type
+  const [pureVegCount, setPureVegCount] = useState(initialGuestCount || 1);
+  const [comboVegCount, setComboVegCount] = useState(initialGuestCount || 1);
+  const [comboNonVegCount, setComboNonVegCount] = useState(initialGuestCount || 1);
   const [jainCount, setJainCount] = useState(initialGuestCount || 1);
 
   const mealTypes = [
@@ -30,30 +32,57 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
 
   const handleMealTypeSelect = (meal) => {
     setSelectedMealType(meal.id);
-    updateBookingData({ 
-      mealType: meal.name,
-      vegCount: vegCount,
-      nonVegCount: nonVegCount,
-      jainCount: jainCount
-    });
+    
+    // Only update relevant counts based on selected meal type
+    const mealData = { mealType: meal.name };
+    
+    if (meal.id === 'veg') {
+      mealData.vegCount = pureVegCount;
+      mealData.nonVegCount = 0; // Reset non-veg count for pure veg
+      mealData.jainCount = 0;
+    } else if (meal.id === 'veg_nonveg') {
+      mealData.vegCount = comboVegCount;
+      mealData.nonVegCount = comboNonVegCount;
+      mealData.jainCount = 0;
+    } else if (meal.id === 'jain') {
+      mealData.vegCount = 0;
+      mealData.nonVegCount = 0;
+      mealData.jainCount = jainCount;
+    }
+    
+    updateBookingData(mealData);
   };
 
   const handleVegCountChange = (amount) => {
-    const newCount = Math.max(1, vegCount + amount);
-    setVegCount(newCount);
-    updateBookingData({ vegCount: newCount });
+    if (selectedMealType === 'veg') {
+      const newCount = Math.max(1, pureVegCount + amount);
+      setPureVegCount(newCount);
+      updateBookingData({ vegCount: newCount });
+    } else if (selectedMealType === 'veg_nonveg') {
+      const newCount = Math.max(1, comboVegCount + amount);
+      setComboVegCount(newCount);
+      updateBookingData({ vegCount: newCount });
+    }
   };
 
   const handleNonVegCountChange = (change) => {
-    const newCount = Math.max(1, nonVegCount + change);
-    setNonVegCount(newCount);
-    updateBookingData({ nonVegCount: newCount });
+    const newCount = Math.max(1, comboNonVegCount + change);
+    setComboNonVegCount(newCount);
+    
+    // Only update booking data if veg_nonveg is selected
+    if (selectedMealType === 'veg_nonveg') {
+      updateBookingData({ nonVegCount: newCount });
+    }
   };
 
   const handleJainCountChange = (amount) => {
     const newCount = Math.max(1, jainCount + amount);
     setJainCount(newCount);
-    updateBookingData({ jainCount: newCount });
+    
+    // Only update booking data if jain is selected
+    if (selectedMealType === 'jain') {
+      updateBookingData({ jainCount: newCount });
+    }
   };
 
   const handleProceed = () => {
@@ -64,8 +93,8 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
     // Save the meal type and guest count data
     const mealData = {
       mealType: mealTypeName,
-      vegCount: selectedMealType === 'veg' || selectedMealType === 'veg_nonveg' ? vegCount : 1,
-      nonVegCount: selectedMealType === 'veg_nonveg' ? nonVegCount : 1,
+      vegCount: selectedMealType === 'veg' ? pureVegCount : selectedMealType === 'veg_nonveg' ? comboVegCount : 1,
+      nonVegCount: selectedMealType === 'veg_nonveg' ? comboNonVegCount : 1,
       jainCount: selectedMealType === 'jain' ? jainCount : 1
     };
     
@@ -243,7 +272,7 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
                       py: 0.5
                     }}
                   >
-                    {vegCount}
+                    {selectedMealType === 'veg' ? pureVegCount : comboVegCount}
                   </Typography>
                   <IconButton 
                     onClick={() => handleVegCountChange(1)} 
@@ -311,7 +340,7 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
                       py: 0.5
                     }}
                   >
-                    {nonVegCount}
+                    {comboNonVegCount}
                   </Typography>
                   <IconButton 
                     onClick={() => handleNonVegCountChange(1)} 
@@ -381,7 +410,7 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
                     py: 0.5
                   }}
                 >
-                  {vegCount}
+                  {pureVegCount}
                 </Typography>
                 <IconButton 
                   onClick={() => handleVegCountChange(1)} 
