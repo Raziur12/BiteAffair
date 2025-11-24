@@ -14,8 +14,8 @@ class CustomizationMenuService {
   }
 
   // Get menu items by category
-  getMenuItems(category = 'all', guestCount = { veg: 10, nonVeg: 8, jain: 1 }) {
-    const totalGuests = guestCount.veg + guestCount.nonVeg + (guestCount.jain || 0);
+  getMenuItems(category = 'all', guestCount = { veg: 10, nonVeg: 8, jain: 0 }) {
+    const totalGuests = (guestCount.veg || 0) + (guestCount.nonVeg || 0);
     
     let items = [];
     
@@ -87,41 +87,34 @@ class CustomizationMenuService {
 
   // Calculate portion size for guests
   calculatePortionForGuests(item, totalGuests) {
-    
-    // Calculate based on per-person portion size
-    if (item.portionSize && item.portionSize.includes('PCS')) {
-      const piecesPerPerson = parseInt(item.portionSize) || 2;
-      const totalPieces = piecesPerPerson * totalGuests;
-      return `${totalPieces}PCS`;
-    } else if (item.portionSize && item.portionSize.includes('GM')) {
-      const gramsPerPerson = parseInt(item.portionSize) || 100;
-      const totalGrams = gramsPerPerson * totalGuests;
-      return `${totalGrams}GM`;
-    } else if (item.quantity && item.quantity.includes('PCS')) {
-      // Fallback to quantity-based calculation
-      const basePieces = parseInt(item.quantity) || 10;
-      const baseServes = item.serves || 5;
-      const piecesPerPerson = basePieces / baseServes;
-      const totalPieces = Math.ceil(piecesPerPerson * totalGuests);
-      return `${totalPieces}PCS`;
-    } else if (item.quantity && item.quantity.includes('GM')) {
-      // Fallback to quantity-based calculation
-      const baseWeight = parseInt(item.quantity) || 500;
-      const baseServes = item.serves || 5;
-      const gramsPerPerson = baseWeight / baseServes;
-      const totalGrams = Math.ceil(gramsPerPerson * totalGuests);
-      return `${totalGrams}GM`;
+    // This unified logic correctly uses the per-person `portionSize` from the data file for ALL categories.
+    // The distinction for Breads/Desserts vs. Starters/Main Course is handled by the GUEST COUNT
+    // passed to this function, not by separate logic here.
+    if (item.portionSize) {
+      const unit = item.portionSize.includes('GM') ? 'GM' : 'PCS';
+      const amountPerPerson = parseFloat(item.portionSize.replace(/[^0-9.]/g, '')) || 1;
+      const totalAmount = amountPerPerson * totalGuests;
+
+      // Handle potential floating point results for units like '1.5PC'
+      const formattedAmount = Number.isInteger(totalAmount) ? totalAmount : totalAmount.toFixed(1);
+
+      return `${formattedAmount}${unit}`;
     }
-    
-    return item.quantity;
+
+    // Fallback if portionSize is not defined (should be avoided)
+    return item.quantity || '1 Portion';
   }
 
   // Calculate price for guests
   calculatePriceForGuests(item, totalGuests) {
-    // basePrice is per person price, so multiply by total guests
-    // This ensures correct pricing: 8 guests × ₹80 = ₹640
-    const calculatedPrice = item.basePrice * totalGuests;
-    return calculatedPrice;
+    // For all items, the price is the per-person price (`basePrice`) multiplied by the relevant guest count.
+    // The `basePrice` in the data file represents the cost for one person's portion (e.g., 2PCS of Paneer Tikka).
+    if (item.basePrice) {
+      return item.basePrice * totalGuests;
+    }
+
+    // Fallback for safety
+    return item.price || 0;
   }
 
   // Get services with dynamic pricing (keeping compatibility)

@@ -391,7 +391,14 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
             overflow: 'hidden'
           }}>
             {/* Dynamic Cart Items */}
-            {items.map((item, index) => (
+            {items.map((item, index) => {
+              // For Breads and Desserts, the serves count should be the total guest count.
+              // For other items, it's the specific guest count (veg/non-veg).
+              const displayServes = (item.category === 'breads' || item.category === 'desserts') 
+                ? item.serves 
+                : item.quantity;
+
+              return (
               <Box key={item.id}>
                 <Box sx={{ 
                   display: 'flex', 
@@ -507,7 +514,7 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
                     ) : (
                       <Box sx={{ mt: 0.5 }}>
                         <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                          Serves: {item.isAddon ? item.quantity : (item.quantity || item.serves || item.customizations?.serves || 10)} | Quantity: {item.isAddon ? item.quantity : (item.portion_size || item.customizations?.quantity || 1)}
+                          Serves: {displayServes} | Quantity: {item.isAddon ? item.quantity : (item.portion_size || item.customizations?.quantity || 1)}
                         </Typography>
 
                         {/* Edit link for Jain/Customized items (non-package) */}
@@ -557,7 +564,7 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
                         fontSize: '0.875rem',
                         mx: 1
                       }}>
-                        {item.quantity}
+                        {displayServes}
                       </Typography>
                       <IconButton
                         size="small"
@@ -574,7 +581,7 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
                     
                     {/* Price */}
                     <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1a237e', minWidth: 40 }}>
-                      ₹{(item.calculatedPrice || item.price || item.basePrice || 0) * item.quantity}
+                      ₹{(item.calculatedPrice || item.price || item.basePrice || 0) * displayServes}
                     </Typography>
                   </Box>
                 </Box>
@@ -584,7 +591,7 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
                   <Box sx={{ borderBottom: '1px solid #f0f0f0', mx: 2 }} />
                 )}
               </Box>
-            ))}
+            )})}
              {/* Add More Items action - only for Customized and Jain menus */}
         {(selectedMenu === 'customized' || selectedMenu === 'jain') && (
           <Box sx={{ px: 2, pb: 0 }}>

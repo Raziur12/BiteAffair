@@ -55,9 +55,14 @@ const ItemCustomizationModal = ({
   // Reset values when modal opens
   useEffect(() => {
     if (open && item) {
-      // Set serves based on item type (veg/non-veg)
-      const serviceCount = getServiceCountForItem(item);
-      setServes(serviceCount);
+      // For Breads and Desserts, the `serves` is the total guest count
+      if (item.category === 'breads' || item.category === 'desserts') {
+        setServes(item.serves || guestCount.veg + guestCount.nonVeg);
+      } else {
+        // For other items, use the existing logic
+        const serviceCount = getServiceCountForItem(item);
+        setServes(serviceCount);
+      }
       setQuantity(item.portion_size || 'XX pcs');
     }
   }, [open, item, guestCount]);
