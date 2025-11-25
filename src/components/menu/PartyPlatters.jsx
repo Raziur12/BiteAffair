@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -110,6 +110,14 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
   const [collapsedSections, setCollapsedSections] = useState({}); // Track collapsed state for each category
   const [services, setServices] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
+
+  // Preload common item images once to improve perceived performance
+  useEffect(() => {
+    try {
+      const commonItems = ['paneer', 'tikka', 'kabab', 'rice', 'naan', 'dal'];
+      customizationMenuService.preloadImages(commonItems);
+    } catch {}
+  }, []);
 
   // Helper function to get service count based on item type
   const getServiceCountForItem = (item) => {
@@ -469,50 +477,8 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
     return categories;
   };
 
-  // Group items by category for list display
-  const getItemsByCategory = () => {
-    const items = filteredAndSortedItems;
-    const categories = {
-      'STARTERS': [],
-      'MAIN COURSE': [],
-      'BREADS': [],
-      'DESSERTS': []
-    };
-
-    items.forEach(item => {
-      const category = item.category || '';
-      
-      // Use the actual category field from customizationMenu.js
-      if (category === 'starters') {
-        categories['STARTERS'].push(item);
-      } else if (category === 'main_course' || category === 'main') {
-        categories['MAIN COURSE'].push(item);
-      } else if (category === 'breads') {
-        categories['BREADS'].push(item);
-      } else if (category === 'desserts' || category === 'dessert') {
-        categories['DESSERTS'].push(item);
-      } else {
-        // Fallback logic for items without proper category
-        if (item.name && (item.name.toLowerCase().includes('tikka') || item.name.toLowerCase().includes('kabab'))) {
-          categories['STARTERS'].push(item);
-        } else if (item.name && (item.name.toLowerCase().includes('paneer') || item.name.toLowerCase().includes('dal') || item.name.toLowerCase().includes('rice') || item.name.toLowerCase().includes('biryani'))) {
-          categories['MAIN COURSE'].push(item);
-        } else if (item.name && (item.name.toLowerCase().includes('naan') || item.name.toLowerCase().includes('roti'))) {
-          categories['BREADS'].push(item);
-        } else if (item.name && (item.name.toLowerCase().includes('jamun') || item.name.toLowerCase().includes('phirni'))) {
-          categories['DESSERTS'].push(item);
-        } else {
-          // Default to starters if category is unclear
-          categories['STARTERS'].push(item);
-        }
-      }
-    });
-
-    return categories;
-  };
-
   // Filter and sort items based on search query, dietary preferences, category, and sorting
-  const filteredAndSortedItems = (() => {
+  const filteredAndSortedItems = useMemo(() => {
     // First filter items
     const filtered = getAllItems().filter(item => {
       if (!item) return false;
@@ -596,7 +562,45 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
           return 0;
       }
     });
-  })();
+  }, [menuData, searchQuery, selectedMenu, vegMenuType, vegFilter, nonVegFilter, selectedCategory, sortBy, bookingConfig]);
+
+  // Group items by category for list display (depends on filteredAndSortedItems)
+  const itemsByCategory = useMemo(() => {
+    const items = filteredAndSortedItems;
+    const categories = {
+      'STARTERS': [],
+      'MAIN COURSE': [],
+      'BREADS': [],
+      'DESSERTS': []
+    };
+
+    items.forEach(item => {
+      const category = item.category || '';
+      if (category === 'starters') {
+        categories['STARTERS'].push(item);
+      } else if (category === 'main_course' || category === 'main') {
+        categories['MAIN COURSE'].push(item);
+      } else if (category === 'breads') {
+        categories['BREADS'].push(item);
+      } else if (category === 'desserts' || category === 'dessert') {
+        categories['DESSERTS'].push(item);
+      } else {
+        if (item.name && (item.name.toLowerCase().includes('tikka') || item.name.toLowerCase().includes('kabab'))) {
+          categories['STARTERS'].push(item);
+        } else if (item.name && (item.name.toLowerCase().includes('paneer') || item.name.toLowerCase().includes('dal') || item.name.toLowerCase().includes('rice') || item.name.toLowerCase().includes('biryani'))) {
+          categories['MAIN COURSE'].push(item);
+        } else if (item.name && (item.name.toLowerCase().includes('naan') || item.name.toLowerCase().includes('roti'))) {
+          categories['BREADS'].push(item);
+        } else if (item.name && (item.name.toLowerCase().includes('jamun') || item.name.toLowerCase().includes('phirni'))) {
+          categories['DESSERTS'].push(item);
+        } else {
+          categories['STARTERS'].push(item);
+        }
+      }
+    });
+
+    return categories;
+  }, [filteredAndSortedItems]);
 
   // Handle adding item to cart
   const handleAddToCart = (item) => {
@@ -690,17 +694,9 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
     });
   }, [guestCount, selectedMenu, updateQuantity]);
 
-  // Prevent auto-scroll on services carousel
+  // Prevent auto-scroll on services carousel (no heavy global interval clearing)
   useEffect(() => {
-    // Clear any existing intervals that might cause auto-scroll
-    const intervals = [];
-    for (let i = 1; i < 99999; i++) {
-      window.clearInterval(i);
-    }
-    return () => {
-      // Cleanup on unmount
-      intervals.forEach(interval => clearInterval(interval));
-    };
+    return () => {};
   }, []);
 
   return (
@@ -1387,7 +1383,7 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
         {/* Menu Items List by Category */}
         {!loading && !error && filteredAndSortedItems.length > 0 && (
           <Box sx={{ width: '100%' }}>
-            {Object.entries(getItemsByCategory())
+            {Object.entries(itemsByCategory)
               .filter(([categoryName, items]) => {
                 // If a specific category is selected, only show that category
                 if (selectedCategory && selectedCategory !== 'All') {
@@ -1821,7 +1817,7 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
                                   >
                                     Serves: {item.serves || getServiceCountForItem(item)}
                                     {/* Rating Badge inside Serves section */}
-                                    <Box sx={{
+                                    <Box component="span" sx={{
                                       bgcolor: '#0051ffff',
                                       color: 'white',
                                       px: 0.5,
@@ -1831,7 +1827,8 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
                                       fontWeight: 'bold',
                                       lineHeight: 1.2,
                                       alignSelf: 'center',
-                                      mt: 0
+                                      mt: 0,
+                                      display: 'inline-block'
                                     }}>
                                       {item.rating || 4.2} ⭐
                                     </Box>

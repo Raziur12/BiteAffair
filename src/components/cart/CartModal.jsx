@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -331,6 +331,55 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
   };
 
 
+  // Memoize per-item derived display values to avoid recomputation on each render
+  const mappedItems = useMemo(() => {
+    return (items || []).map((item) => {
+      const isBreadOrDessert = item.category === 'breads' || item.category === 'desserts';
+      const displayServes = isBreadOrDessert ? item.serves : item.quantity;
+
+      // Derive quantity text dynamically to stay in sync with serves changes
+      const computeQuantityText = () => {
+        if (item.isAddon) return item.quantity;
+        // Prefer dynamic recompute for PCS/GM using per-serve derivation
+        const qtySource = (typeof item.portion_size === 'string' && /PCS|GM/i.test(item.portion_size))
+          ? item.portion_size
+          : (typeof item.quantity === 'string' && /PCS|GM/i.test(item.quantity))
+            ? item.quantity
+            : null;
+
+        if (qtySource) {
+          const unit = /GM/i.test(qtySource) ? 'GM' : 'PCS';
+          const baseAmount = parseFloat(qtySource.replace(/[^0-9.]/g, '')) || 0;
+          const basisServes = Number(item.calculatedFor) || Number(item.originalServes) || Number(item.serves) || 1;
+          const perServe = basisServes > 0 ? baseAmount / basisServes : 0;
+          const total = Math.ceil(perServe * (Number(displayServes) || 0));
+          return `${total}${unit}`;
+        }
+
+        if (item.portionSize && typeof item.portionSize === 'string') {
+          const perPersonAmount = parseFloat(item.portionSize.replace(/[^0-9.]/g, '')) || 0;
+          const unit = /GM/i.test(item.portionSize) ? 'GM' : 'PCS';
+          const total = perPersonAmount * (Number(displayServes) || 0);
+          const formatted = Number.isInteger(total) ? total : total.toFixed(1);
+          return `${formatted}${unit}`;
+        }
+        if (item.customizations?.quantity) return item.customizations.quantity;
+        return '1';
+      };
+
+      const quantityText = computeQuantityText();
+      const unitPrice = item.calculatedPrice || item.price || item.basePrice || 0;
+      const lineTotal = unitPrice * (Number(displayServes) || 0);
+
+      return {
+        ...item,
+        _displayServes: displayServes,
+        _quantityText: quantityText,
+        _lineTotal: lineTotal
+      };
+    });
+  }, [items]);
+
   // Render as modal with new design
   return (
     <Dialog
@@ -391,13 +440,9 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
             overflow: 'hidden'
           }}>
             {/* Dynamic Cart Items */}
-            {items.map((item, index) => {
-              // For Breads and Desserts, the serves count should be the total guest count.
-              // For other items, it's the specific guest count (veg/non-veg).
-              const displayServes = (item.category === 'breads' || item.category === 'desserts') 
-                ? item.serves 
-                : item.quantity;
-
+            {mappedItems.map((item, index) => {
+              const displayServes = item._displayServes;
+              const quantityText = item._quantityText;
               return (
               <Box key={item.id}>
                 <Box sx={{ 
@@ -514,7 +559,7 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
                     ) : (
                       <Box sx={{ mt: 0.5 }}>
                         <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                          Serves: {displayServes} | Quantity: {item.isAddon ? item.quantity : (item.portion_size || item.customizations?.quantity || 1)}
+                          Serves: {displayServes} | Quantity: {quantityText}
                         </Typography>
 
                         {/* Edit link for Jain/Customized items (non-package) */}
@@ -581,7 +626,7 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
                     
                     {/* Price */}
                     <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1a237e', minWidth: 40 }}>
-                      ₹{(item.calculatedPrice || item.price || item.basePrice || 0) * displayServes}
+                      ₹{item._lineTotal}
                     </Typography>
                   </Box>
                 </Box>
@@ -617,7 +662,7 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
           </Box>
         )}
             {/* Empty state when no items */}
-            {items.length === 0 && (
+            {mappedItems.length === 0 && (
               <Box sx={{ p: 4, textAlign: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
                   Your cart is empty

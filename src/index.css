@@ -1,6 +1,43 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* Tailwind v4 theme tokens */
+@theme {
+  /* Primary */
+  --color-primary-50: #fef7ee;
+  --color-primary-100: #fdedd3;
+  --color-primary-200: #fbd7a5;
+  --color-primary-300: #f8bb6d;
+  --color-primary-400: #f59432;
+  --color-primary-500: #f97316;
+  --color-primary-600: #ea580c;
+  --color-primary-700: #c2410c;
+  --color-primary-800: #9a3412;
+  --color-primary-900: #7c2d12;
+
+  /* Secondary */
+  --color-secondary-50: #f0fdf4;
+  --color-secondary-100: #dcfce7;
+  --color-secondary-200: #bbf7d0;
+  --color-secondary-300: #86efac;
+  --color-secondary-400: #4ade80;
+  --color-secondary-500: #22c55e;
+  --color-secondary-600: #16a34a;
+  --color-secondary-700: #15803d;
+  --color-secondary-800: #166534;
+  --color-secondary-900: #14532d;
+
+  /* Accent */
+  --color-accent-50: #fffbeb;
+  --color-accent-100: #fef3c7;
+  --color-accent-200: #fde68a;
+  --color-accent-300: #fcd34d;
+  --color-accent-400: #fbbf24;
+  --color-accent-500: #f59e0b;
+  --color-accent-600: #d97706;
+  --color-accent-700: #b45309;
+  --color-accent-800: #92400e;
+  --color-accent-900: #78350f;
+}
 
 @layer base {
   html {
@@ -23,7 +60,7 @@
   }
   
   .glass-effect {
-    @apply bg-white bg-opacity-10 backdrop-blur-md border border-white border-opacity-20;
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
   }
   
   .btn-primary {
