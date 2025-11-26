@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -110,6 +110,10 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
   const [collapsedSections, setCollapsedSections] = useState({}); // Track collapsed state for each category
   const [services, setServices] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
+  const userEditRef = useRef(false);
+  const lastUserEditAt = useRef(0);
+  const initializedFromBookingRef = useRef(false);
+  const [syncTrigger, setSyncTrigger] = useState(0);
 
   // Preload common item images once to improve perceived performance
   useEffect(() => {
@@ -137,17 +141,18 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
     }
   };
 
-  // Extract guest count from booking config
+  // Extract guest count from booking config (initialize once, don't overwrite user edits)
   useEffect(() => {
-    if (bookingConfig) {
-      const extractedGuestCount = {
-        veg: Math.max(1, bookingConfig.vegCount || 10),
-        nonVeg: Math.max(1, bookingConfig.nonVegCount || 1),
-        jain: Math.max(1, bookingConfig.jainCount || 1)
-      };
-      setGuestCount(extractedGuestCount);
-    } else {
-    }
+    if (!bookingConfig) return;
+    if (initializedFromBookingRef.current) return;
+
+    const extractedGuestCount = {
+      veg: Math.max(1, bookingConfig.vegCount || 10),
+      nonVeg: Math.max(1, bookingConfig.nonVegCount || 1),
+      jain: Math.max(1, bookingConfig.jainCount || 1)
+    };
+    setGuestCount(extractedGuestCount);
+    initializedFromBookingRef.current = true;
   }, [bookingConfig]);
 
   // Persist guest count so it survives page refresh
@@ -157,6 +162,15 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
     } catch (e) {
       console.warn('guestCount localStorage write failed', e);
     }
+  }, [guestCount]);
+
+  // TEMP DEBUG: Log guest count updates to trace flow
+  useEffect(() => {
+    console.log('👥 Guest Count Updated:', {
+      veg: guestCount.veg,
+      nonVeg: guestCount.nonVeg,
+      jain: guestCount.jain
+    });
   }, [guestCount]);
 
   // Load services and testimonials data
@@ -425,7 +439,6 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
   const getAllItems = () => {
     if (!menuData) return [];
 
-
     // Handle new menuDataService structure (object with category keys)
     if (typeof menuData === 'object' && !Array.isArray(menuData)) {
       // Check if it's the customizationMenuService structure with items array
@@ -658,45 +671,162 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
 
   // Handle guest count changes
   const handleGuestCountChange = (type, value) => {
-    setGuestCount(prev => ({
-      ...prev,
-      [type]: Math.max(1, value)
-    }));
-  };
+    console.log(`🎯 PartyPlatters: handleGuestCountChange called - ${type}: ${value}`);
+    // Mark as user edit to prevent immediate sync
+    userEditRef.current = true;
+    lastUserEditAt.current = Date.now();
 
-  // Keep cart item quantities in sync with guest count for Customized, Jain, and Veg menus
-  // Only react when guestCount or selectedMenu changes, to avoid fighting
-  // with direct quantity edits done from the Order Summary.
-  useEffect(() => {
-    if (selectedMenu !== 'customized' && selectedMenu !== 'jain' && selectedMenu !== 'veg') return;
-    if (!cartItems || cartItems.length === 0) return;
+    setGuestCount(prev => {
+      const newCount = {
+        ...prev,
+        [type]: Math.max(1, parseInt(value))
+      };
+      console.log('✅ Updated guest count:', newCount);
+      return newCount;
+    });
 
-    cartItems.forEach((item) => {
-      // Skip addons - they should maintain their manually set quantities
-      if (item.isAddon) return;
-      
-      let idealServes;
+    // Immediate in-place sync for affected items to avoid bounce-back
+    const targetGuestCount = Math.max(1, parseInt(value));
+    cartItems.forEach(item => {
+      // Skip addons and breads/desserts
+      if (item.isAddon || item.category === 'breads' || item.category === 'desserts') return;
 
-      if (selectedMenu === 'veg' && (item.isPackage || item.isPackageItem)) {
-        // For Veg menu packages, tie quantity directly to Veg guest count
-        idealServes = parseInt(guestCount.veg) || 0;
-      } else {
-        // For Customized and Jain menus, use item type (veg/non-veg/jain)
-        // to derive the correct guest bucket
-        if (item.isPackage || item.isPackageItem) return; // other packages are managed separately
-        idealServes = getServiceCountForItem(item);
-      }
-      const currentQty = parseInt(item.quantity) || 0;
+      // Match items by guest type
+      const isTarget =
+        (type === 'jain' && (item.isJain || selectedMenu === 'jain')) ||
+        (type === 'nonVeg' && item.isNonVeg) ||
+        (type === 'veg' && !item.isNonVeg && !item.isJain);
 
-      if (idealServes > 0 && idealServes !== currentQty) {
-        updateQuantity(item.id, idealServes);
+      if (isTarget && parseInt(item.quantity) !== targetGuestCount) {
+        const unitPrice = item.calculatedPrice || item.price || item.basePrice || 0;
+
+        const computeQuantityText = () => {
+          if (item.portionSize && typeof item.portionSize === 'string') {
+            const unit = /GM/i.test(item.portionSize) ? 'GM' : 'PCS';
+            const perPersonAmount = parseFloat(item.portionSize.replace(/[^0-9.]/g, '')) || 0;
+            const total = perPersonAmount * targetGuestCount;
+            const formatted = Number.isInteger(total) ? total : total.toFixed(1);
+            return `${formatted}${unit}`;
+          }
+          const source = (typeof item.portion_size === 'string' && /PCS|GM/i.test(item.portion_size))
+            ? item.portion_size
+            : (typeof item.quantity === 'string' && /PCS|GM/i.test(item.quantity))
+              ? item.quantity
+              : null;
+          if (source) {
+            const unit = /GM/i.test(source) ? 'GM' : 'PCS';
+            const baseAmount = parseFloat(source.replace(/[^0-9.]/g, '')) || 0;
+            const basisServes = Number(item.calculatedFor) || Number(item.originalServes) || Number(item.serves) || 1;
+            const perServe = basisServes > 0 ? baseAmount / basisServes : 0;
+            const total = Math.ceil(perServe * targetGuestCount);
+            return `${total}${unit}`;
+          }
+          return item.quantity || '1';
+        };
+
+        const updatedItem = {
+          ...item,
+          quantity: targetGuestCount,
+          serves: targetGuestCount,
+          calculatedQuantity: computeQuantityText(),
+          calculatedPrice: unitPrice
+        };
+        updateQuantity(item.id, targetGuestCount, updatedItem);
       }
     });
-  }, [guestCount, selectedMenu, updateQuantity]);
+
+    // Release lock after short delay to allow sync to resume
+    setTimeout(() => { 
+      userEditRef.current = false;
+      console.log('🔓 Lock released - sync can resume');
+    }, 350);
+  };
+  // Sync cart items with guest count changes
+  useEffect(() => {
+    // Skip if user is actively editing (short lock period) to avoid bounce-back
+    if (userEditRef.current) {
+      const timeSinceEdit = Date.now() - lastUserEditAt.current;
+      if (timeSinceEdit < 350) {
+        const remaining = 350 - timeSinceEdit;
+        setTimeout(() => setSyncTrigger(v => v + 1), remaining);
+        return;
+      }
+    }
+    console.log('🔄 Syncing cart items with guest count:', guestCount);
+
+    // Update all cart items to reflect new guest counts
+    cartItems.forEach(item => {
+      // Skip addons and breads/desserts
+      if (item.isAddon || item.category === 'breads' || item.category === 'desserts') {
+        return;
+      }
+
+      // Determine the correct guest type for this item
+      let targetGuestCount;
+      if (selectedMenu === 'jain' || item.isJain) {
+        targetGuestCount = parseInt(guestCount.jain);
+      } else if (item.isNonVeg) {
+        targetGuestCount = parseInt(guestCount.nonVeg);
+      } else {
+        targetGuestCount = parseInt(guestCount.veg);
+      }
+
+      // Only update if the quantity doesn't match the target guest count
+      if (parseInt(item.quantity) !== targetGuestCount) {
+        console.log(`🔄 Updating ${item.name}: ${item.quantity} → ${targetGuestCount}`);
+
+        // Recalculate price and quantity
+        const unitPrice = item.calculatedPrice || item.price || item.basePrice || 0;
+
+        // Compute new quantity text
+        const computeQuantityText = () => {
+          if (item.portionSize && typeof item.portionSize === 'string') {
+            const unit = /GM/i.test(item.portionSize) ? 'GM' : 'PCS';
+            const perPersonAmount = parseFloat(item.portionSize.replace(/[^0-9.]/g, '')) || 0;
+            const total = perPersonAmount * targetGuestCount;
+            const formatted = Number.isInteger(total) ? total : total.toFixed(1);
+            return `${formatted}${unit}`;
+          }
+
+          const source = (typeof item.portion_size === 'string' && /PCS|GM/i.test(item.portion_size))
+            ? item.portion_size
+            : (typeof item.quantity === 'string' && /PCS|GM/i.test(item.quantity))
+              ? item.quantity
+              : null;
+
+          if (source) {
+            const unit = /GM/i.test(source) ? 'GM' : 'PCS';
+            const baseAmount = parseFloat(source.replace(/[^0-9.]/g, '')) || 0;
+            const basisServes = Number(item.calculatedFor) || Number(item.originalServes) || Number(item.serves) || 1;
+            const perServe = basisServes > 0 ? baseAmount / basisServes : 0;
+            const total = Math.ceil(perServe * targetGuestCount);
+            return `${total}${unit}`;
+          }
+
+          return item.quantity || '1';
+        };
+
+        const newQuantityText = computeQuantityText();
+
+        // Update the item
+        const updatedItem = {
+          ...item,
+          quantity: targetGuestCount,
+          serves: targetGuestCount,
+          calculatedQuantity: newQuantityText,
+          calculatedPrice: unitPrice
+        };
+
+        updateQuantity(item.id, targetGuestCount, updatedItem);
+      }
+    });
+  }, [guestCount, selectedMenu, syncTrigger]);
 
   // Prevent auto-scroll on services carousel (no heavy global interval clearing)
   useEffect(() => {
-    return () => {};
+    setTimeout(() => {
+      userEditRef.current = false;
+    }, 1200);
   }, []);
 
   return (
@@ -704,6 +834,7 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
 
       <Container maxWidth="lg" sx={{ py: { xs: 3, sm: 4, md: 5 }, px: { xs: 1, sm: 2 }, width: '100%', maxWidth: '100%' }}>
 
+      // ... rest of the code remains the same ...
         {/* Search Bar and Menu Dropdown in Same Row */}
         <Box sx={{ mb: 1, display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}>
           <TextField
@@ -2295,6 +2426,8 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
           guestCount={guestCount}
           onGuestCountChange={handleGuestCountChange}
           selectedMenu={selectedMenu}
+          userEditRef={userEditRef}
+          lastUserEditAt={lastUserEditAt}
         />
 
         <EnhancedCheckout

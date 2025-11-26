@@ -57,13 +57,14 @@ const ItemCustomizationModal = ({
     if (open && item) {
       // For Breads and Desserts, the `serves` is the total guest count
       if (item.category === 'breads' || item.category === 'desserts') {
-        setServes(item.serves || guestCount.veg + guestCount.nonVeg);
+        const totalGuests = (guestCount?.veg || 0) + (guestCount?.nonVeg || 0) + (guestCount?.jain || 0);
+        setServes(item.serves || totalGuests);
       } else {
         // For other items, use the existing logic
         const serviceCount = getServiceCountForItem(item);
         setServes(serviceCount);
       }
-      setQuantity(item.portion_size || 'XX pcs');
+      setQuantity(item.portion_size || item.calculatedQuantity || 'XX pcs');
     }
   }, [open, item, guestCount]);
 

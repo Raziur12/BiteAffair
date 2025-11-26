@@ -32,7 +32,7 @@ import { smsOtpService as otpService } from '../../services/smsOtpService'; // S
 import { whatsappService } from '../../services/whatsappService';
 import { locationService } from '../../services/locationService';
 
-const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGuestCountChange, selectedMenu }) => {
+const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGuestCountChange, selectedMenu, userEditRef, lastUserEditAt }) => {
   const { items, updateQuantity, removeItem, getTotalPrice, addItem } = useCart();
   const navigate = useNavigate();
   
@@ -87,35 +87,63 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
   }, [resendTimer, showOTP]);
 
   const handleQuantityChange = (id, newQuantity) => {
-    // Find the item so we can infer which guest bucket (veg/non-veg/jain) it belongs to
     const item = items.find(i => i.id === id);
+    if (!item) return;
 
-    const previousQuantity = item ? item.quantity : 0;
+    const previousQuantity = parseInt(item.quantity) || 0;
     const delta = newQuantity - previousQuantity;
+    console.log(`🛒 CartModal: Changing ${item.name} quantity: ${previousQuantity} → ${newQuantity} (delta: ${delta})`);
 
+    // Determine which guest type to update
+    let guestType = 'veg';
+    if (selectedMenu === 'jain') {
+      guestType = 'jain';
+    } else if (item.isNonVeg) {
+      guestType = 'nonVeg';
+    } else if (item.isJain) {
+      guestType = 'jain';
+    } else if (item.isPackage || item.isPackageItem || selectedMenu === 'veg') {
+      guestType = 'veg';
+    }
+
+    const newGuestCount = Math.max(1, newQuantity);
+    console.log(`🎯 CartModal → PartyPlatters: Updating ${guestType} guest count to ${newGuestCount}`);
+
+    // 1) Propagate to parent first so sync uses the new guestCount
+    if (onGuestCountChange) onGuestCountChange(guestType, newGuestCount);
+
+    // 2) Update the cart line so UI reflects the change immediately
     if (newQuantity <= 0) {
       removeItem(id);
     } else {
-      updateQuantity(id, newQuantity);
+      const unitPrice = item.calculatedPrice || item.price || item.basePrice || 0;
+      const updatedItem = {
+        ...item,
+        quantity: newQuantity,
+        serves: newQuantity,
+        calculatedPrice: unitPrice
+      };
+      updateQuantity(id, newQuantity, updatedItem);
     }
 
-    // Optionally propagate quantity changes back to shared guestCount
     // Skip guest count propagation for addons
-    if (!item || !guestCount || !onGuestCountChange || delta === 0 || item.isAddon) return;
-
-    const safeParse = (value) => parseInt(value, 10) || 0;
-
-    // Veg packages and normal veg items both map to the veg guest bucket
-    if (item.isNonVeg) {
-      const current = safeParse(guestCount.nonVeg);
-      onGuestCountChange('nonVeg', Math.max(1, current + delta));
-    } else if (item.isJain) {
-      const current = safeParse(guestCount.jain);
-      onGuestCountChange('jain', Math.max(1, current + delta));
-    } else {
-      const current = safeParse(guestCount.veg);
-      onGuestCountChange('veg', Math.max(1, current + delta));
+    if (item.isAddon) {
+      console.log('⏭️ Skipping guest count update (addon)');
+      return;
     }
+
+    // Skip guest count propagation for Breads & Desserts
+    if (item.category === 'breads' || item.category === 'desserts') {
+      console.log('🥖🍰 Skipping guest count update (breads/desserts)');
+      return;
+    }
+
+    // Skip if no guest count handler or no actual change
+    if (!guestCount || !onGuestCountChange || delta === 0) {
+      return;
+    }
+
+    // We already propagated above; nothing more to do here
   };
 
   const handleSendOTP = async () => {
@@ -593,7 +621,10 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid #e0e0e0', borderRadius: 1, px: 1, py: 0.5 }}>
                       <IconButton
                         size="small"
-                        onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                        onClick={() => {
+                          const base = parseInt(String(displayServes).replace(/\D/g, ''), 10) || 0;
+                          handleQuantityChange(item.id, Math.max(0, base - 1));
+                        }}
                         sx={{ 
                           width: 20,
                           height: 20,
@@ -613,7 +644,10 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
                       </Typography>
                       <IconButton
                         size="small"
-                        onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                        onClick={() => {
+                          const base = parseInt(String(displayServes).replace(/\D/g, ''), 10) || 0;
+                          handleQuantityChange(item.id, base + 1);
+                        }}
                         sx={{ 
                           width: 20,
                           height: 20,

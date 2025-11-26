@@ -26,16 +26,22 @@ const cartReducer = (state, action) => {
       }
     
     case 'UPDATE_QUANTITY':
-      const updatedItems = state.items.map(item => {
-        if (item.id === action.payload.id) {
-          const newQuantity = Math.max(0, action.payload.quantity);
-          return { ...item, quantity: newQuantity };
-        }
-        return item;
-      }).filter(item => item.quantity > 0);
-      
+      const updatedItems = state.items
+        .map(item => {
+          if (item.id === action.payload.id) {
+            const newQuantity = Math.max(0, action.payload.quantity);
+            if (action.payload.updatedItem) {
+              // Merge in any recalculated fields provided by caller (e.g., calculatedQuantity, serves, price)
+              return { ...item, ...action.payload.updatedItem, quantity: newQuantity };
+            }
+            return { ...item, quantity: newQuantity };
+          }
+          return item;
+        })
+        .filter(item => item.quantity > 0);
+
       const newTotalItems = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
-      
+
       return {
         ...state,
         items: updatedItems,
@@ -77,8 +83,8 @@ export const CartProvider = ({ children }) => {
     dispatch({ type: 'ADD_ITEM', payload: item });
   };
 
-  const updateQuantity = (id, quantity) => {
-    dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity } });
+  const updateQuantity = (id, quantity, updatedItem = null) => {
+    dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity, updatedItem } });
   };
 
   const removeItem = (id) => {
