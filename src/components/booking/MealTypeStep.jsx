@@ -23,11 +23,12 @@ const MEAL_TYPES = [
 
 const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
   const [selectedMealType, setSelectedMealType] = useState(null);
-  // Separate count states for each meal type
-  const [pureVegCount, setPureVegCount] = useState(initialGuestCount || 1);
-  const [comboVegCount, setComboVegCount] = useState(initialGuestCount || 1);
-  const [comboNonVegCount, setComboNonVegCount] = useState(initialGuestCount || 1);
-  const [jainCount, setJainCount] = useState(initialGuestCount || 1);
+  // Separate count states for each meal type (minimum 5 guests)
+  const initialCount = Math.max(5, initialGuestCount || 5);
+  const [pureVegCount, setPureVegCount] = useState(initialCount);
+  const [comboVegCount, setComboVegCount] = useState(initialCount);
+  const [comboNonVegCount, setComboNonVegCount] = useState(initialCount);
+  const [jainCount, setJainCount] = useState(initialCount);
 
   const handleMealTypeSelect = useCallback((meal) => {
     setSelectedMealType(meal.id);
@@ -54,18 +55,18 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
 
   const handleVegCountChange = useCallback((amount) => {
     if (selectedMealType === 'veg') {
-      const newCount = Math.max(1, pureVegCount + amount);
+      const newCount = Math.max(5, pureVegCount + amount);
       setPureVegCount(newCount);
       updateBookingData({ vegCount: newCount });
     } else if (selectedMealType === 'veg_nonveg') {
-      const newCount = Math.max(1, comboVegCount + amount);
+      const newCount = Math.max(5, comboVegCount + amount);
       setComboVegCount(newCount);
       updateBookingData({ vegCount: newCount });
     }
   }, [selectedMealType, pureVegCount, comboVegCount, updateBookingData]);
 
   const handleNonVegCountChange = useCallback((change) => {
-    const newCount = Math.max(1, comboNonVegCount + change);
+    const newCount = Math.max(5, comboNonVegCount + change);
     setComboNonVegCount(newCount);
     
     // Only update booking data if veg_nonveg is selected
@@ -75,7 +76,7 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
   }, [selectedMealType, comboNonVegCount, updateBookingData]);
 
   const handleJainCountChange = useCallback((amount) => {
-    const newCount = Math.max(1, jainCount + amount);
+    const newCount = Math.max(5, jainCount + amount);
     setJainCount(newCount);
     
     // Only update booking data if jain is selected
@@ -92,9 +93,9 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
     // Save the meal type and guest count data
     const mealData = {
       mealType: mealTypeName,
-      vegCount: selectedMealType === 'veg' ? pureVegCount : selectedMealType === 'veg_nonveg' ? comboVegCount : 1,
-      nonVegCount: selectedMealType === 'veg_nonveg' ? comboNonVegCount : 1,
-      jainCount: selectedMealType === 'jain' ? jainCount : 1
+      vegCount: selectedMealType === 'veg' ? pureVegCount : selectedMealType === 'veg_nonveg' ? comboVegCount : 5,
+      nonVegCount: selectedMealType === 'veg_nonveg' ? comboNonVegCount : 5,
+      jainCount: selectedMealType === 'jain' ? jainCount : 5
     };
     
     

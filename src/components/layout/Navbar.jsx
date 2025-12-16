@@ -67,7 +67,7 @@ const Navbar = ({ selectedLocation: locationFromApp }) => {
 
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center', p: 2 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1.5 }}>
         <Box sx={{
           bgcolor: 'white',
           borderRadius: 1,
@@ -88,9 +88,17 @@ const Navbar = ({ selectedLocation: locationFromApp }) => {
         </Box>
       </Box>
       {/* Phone number */}
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-start', mb: 2, gap: 0 }}>
-        <Phone sx={{ color: '#1e3a8a' }} />
-        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          // gap: 1,
+          // mb: 2
+        }}
+      >
+        <Phone sx={{ color: '#1e3a8a', fontSize: 18 }} />
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
           +91 92115 70030
         </Typography>
       </Box>

@@ -84,15 +84,16 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
         const parsed = JSON.parse(stored);
         if (parsed && typeof parsed === 'object') {
           return {
-            veg: Math.max(1, parseInt(parsed.veg) || 1),
-            nonVeg: Math.max(1, parseInt(parsed.nonVeg) || 1),
-            jain: Math.max(1, parseInt(parsed.jain) || 1)
+            veg: Math.max(5, parseInt(parsed.veg) || 5),
+            nonVeg: Math.max(5, parseInt(parsed.nonVeg) || 5),
+            jain: Math.max(5, parseInt(parsed.jain) || 5)
           };
         }
       }
     } catch (e) {
     }
-    return { veg: 10, nonVeg: 8, jain: 1 };
+    // Default guest counts (minimum 5 each)
+    return { veg: 10, nonVeg: 8, jain: 5 };
   });
   const [selectedItem, setSelectedItem] = useState(null);
   const [customizationModalOpen, setCustomizationModalOpen] = useState(false);
@@ -146,9 +147,9 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
     if (initializedFromBookingRef.current) return;
 
     const extractedGuestCount = {
-      veg: Math.max(1, bookingConfig.vegCount || 10),
-      nonVeg: Math.max(1, bookingConfig.nonVegCount || 1),
-      jain: Math.max(1, bookingConfig.jainCount || 1)
+      veg: Math.max(5, bookingConfig.vegCount || 10),
+      nonVeg: Math.max(5, bookingConfig.nonVegCount || 5),
+      jain: Math.max(5, bookingConfig.jainCount || 5)
     };
     setGuestCount(extractedGuestCount);
     initializedFromBookingRef.current = true;
@@ -660,16 +661,18 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
     userEditRef.current = true;
     lastUserEditAt.current = Date.now();
 
+    const safeValue = Math.max(5, parseInt(value));
+
     setGuestCount(prev => {
       const newCount = {
         ...prev,
-        [type]: Math.max(1, parseInt(value))
+        [type]: safeValue
       };
       return newCount;
     });
 
     // Immediate in-place sync for affected items to avoid bounce-back
-    const targetGuestCount = Math.max(1, parseInt(value));
+    const targetGuestCount = safeValue;
     cartItems.forEach(item => {
       // Skip addons and breads/desserts
       if (item.isAddon || item.category === 'breads' || item.category === 'desserts') return;
@@ -1210,11 +1213,11 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
                     if (selectedMenu === 'jain') {
                       setGuestCount(prev => ({ 
                         ...prev, 
-                        jain: Math.max(1, parseInt(prev.jain || prev.veg) - 1),
-                        veg: Math.max(1, parseInt(prev.jain || prev.veg) - 1)
+                        jain: Math.max(5, parseInt(prev.jain || prev.veg) - 1),
+                        veg: Math.max(5, parseInt(prev.jain || prev.veg) - 1)
                       }));
                     } else {
-                      setGuestCount(prev => ({ ...prev, veg: Math.max(1, parseInt(prev.veg) - 1) }));
+                      setGuestCount(prev => ({ ...prev, veg: Math.max(5, parseInt(prev.veg) - 1) }));
                     }
                   }}
                   sx={{ width: 20, height: 20, fontSize: '0.7rem' }}
@@ -1276,7 +1279,7 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
                 }}>
                   <IconButton
                     size="small"
-                    onClick={() => setGuestCount(prev => ({ ...prev, nonVeg: Math.max(1, parseInt(prev.nonVeg) - 1) }))}
+                    onClick={() => setGuestCount(prev => ({ ...prev, nonVeg: Math.max(5, parseInt(prev.nonVeg) - 1) }))}
                     sx={{ width: 20, height: 20, fontSize: '0.7rem' }}
                   >
                     <Remove sx={{ fontSize: 12 }} />
