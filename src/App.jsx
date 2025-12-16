@@ -5,7 +5,6 @@ import { Navbar, Footer } from './components/layout';
 import { PartyPlatters } from './components/menu';
 import { MenuErrorBoundary, FormErrorBoundary } from './components/common';
 import { CartProvider } from './context/CartContext';
-import { MENU_TYPES } from './utils/constants';
 import BookingFlow from './components/booking/BookingFlow';
 import OrderStatus from './components/cart/OrderStatus';
 
@@ -15,27 +14,24 @@ const OrderFlowManager = lazy(() => import('./components/order/OrderFlowManager'
 const PaymentPage = lazy(() => import('./components/booking/PaymentPage'));
 const CheckoutConfirmation = lazy(() => import('./components/cart/CheckoutConfirmation'));
 const CartModal = lazy(() => import('./components/cart/CartModal'));
+const About = lazy(() => import('./components/sections/About'));
 
 const HomePage = ({ bookingConfig, selectedLocation }) => {
   const [cartOpen, setCartOpen] = useState(false);
   const location = useLocation();
 
-  // Scroll to section based on URL
+  // Scroll to section based on URL (menu or contact only)
   useEffect(() => {
     const scrollToSection = () => {
       const path = location.pathname;
-      let sectionId = '';
-      
-      if (path.includes('/menu')) {
-        sectionId = 'menu';
-      } else if (path.includes('/about')) {
-        sectionId = 'about';
-      } else if (path.includes('/testimonials')) {
-        sectionId = 'testimonials';
-      } else if (path.includes('/contact')) {
+      // Default to menu section for all non-contact routes
+      let sectionId = 'menu';
+
+      if (path.includes('/contact')) {
         sectionId = 'contact';
-      } else if (path.includes('/home')) {
-        sectionId = 'home';
+      }
+      if (path.includes('/about')) {
+        sectionId = 'about';
       }
       
       if (sectionId) {
@@ -73,6 +69,9 @@ const HomePage = ({ bookingConfig, selectedLocation }) => {
             onOpenCart={() => setCartOpen(true)}
           />
         </MenuErrorBoundary>
+        <Suspense fallback={null}>
+          <About />
+        </Suspense>
         <FormErrorBoundary>
           <Suspense fallback={null}>
             <Box id="contact">
@@ -103,9 +102,6 @@ const App = () => {
     return config;
   });
   const [selectedLocation, setSelectedLocation] = useState(null);
-  const [selectedMenu, setSelectedMenu] = useState(MENU_TYPES.JAIN);
-  const [dietaryFilter, setDietaryFilter] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
 
   const navigate = useNavigate();
 
@@ -124,7 +120,7 @@ const App = () => {
     setBookingConfig(config);
     // Save to localStorage for persistence across page refreshes
     localStorage.setItem('biteAffairs_bookingConfig', JSON.stringify(config));
-    navigate('/bite-affair/home');
+    navigate('/bite-affair/menu');
   };
 
   const clearBookingConfig = () => {
@@ -137,10 +133,8 @@ const App = () => {
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', width: '100%', overflowX: 'hidden' }}>
         <Routes>
           <Route path="/" element={<BookingFlow onComplete={handleBookingComplete} onLocationSelect={handleLocationSelect} />} />
-          <Route path="/bite-affair/home" element={<HomePage bookingConfig={bookingConfig} selectedLocation={selectedLocation} />} />
           <Route path="/bite-affair/menu" element={<HomePage bookingConfig={bookingConfig} selectedLocation={selectedLocation} />} />
           <Route path="/bite-affair/about" element={<HomePage bookingConfig={bookingConfig} selectedLocation={selectedLocation} />} />
-          <Route path="/bite-affair/testimonials" element={<HomePage bookingConfig={bookingConfig} selectedLocation={selectedLocation} />} />
           <Route path="/bite-affair/contact" element={<HomePage bookingConfig={bookingConfig} selectedLocation={selectedLocation} />} />
           <Route path="/bite-affair/cart" element={<Suspense fallback={null}><CartModal open={true} /></Suspense>} />
           <Route path="/bite-affair/checkout" element={<Suspense fallback={null}><CheckoutConfirmation open={true} /></Suspense>} />

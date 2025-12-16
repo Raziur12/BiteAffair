@@ -1,4 +1,5 @@
 import React, { useState, useCallback, memo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -27,13 +28,11 @@ import {
 import { locationService } from '../../services/locationService';
 import { LOCATIONS } from '../../utils/constants';
 
-// Hoisted static nav items
+// Hoisted static nav items (desktop top bar)
 const NAV_ITEMS = [
-  { label: 'Home', href: '/bite-affair/home' },
-  { label: 'Menu', href: '/bite-affair/menu' },
-  { label: 'About', href: '/bite-affair/about' },
-  { label: 'Testimonials', href: '/bite-affair/testimonials' },
-  { label: 'Contact', href: '/bite-affair/contact' }
+  { label: 'Explore Menu', href: '/bite-affair/menu' },
+  { label: 'Our Legacy', href: '/bite-affair/about' },
+  { label: 'Contact Us', href: '/bite-affair/contact' }
 ];
 
 
@@ -45,6 +44,7 @@ const Navbar = ({ selectedLocation: locationFromApp }) => {
   );
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const navigate = useNavigate();
 
   const handleDrawerToggle = useCallback(() => {
     setMobileOpen(prev => !prev);
@@ -87,22 +87,25 @@ const Navbar = ({ selectedLocation: locationFromApp }) => {
           />
         </Box>
       </Box>
-      
+      {/* Phone number */}
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-start', mb: 2, gap: 0 }}>
+        <Phone sx={{ color: '#1e3a8a' }} />
+        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+          +91 92115 70030
+        </Typography>
+      </Box>
+
       <List>
         {navItems.map((item) => (
           <ListItem key={item.label} disablePadding>
             <ListItemButton
-              component="a"
-              href={item.href}
-              onClick={(e) => {
-                e.preventDefault();
-                handleDrawerToggle(); // Close the drawer first
-                // Navigate to the URL
-                window.location.href = item.href;
+              onClick={() => {
+                handleDrawerToggle();
+                navigate(item.href);
               }}
               sx={{ 
                 textAlign: 'center', 
-                py: 2,
+                py: 1.5,
                 '&:hover': {
                   bgcolor: 'rgba(0, 0, 0, 0.04)'
                 }
@@ -116,6 +119,14 @@ const Navbar = ({ selectedLocation: locationFromApp }) => {
           </ListItem>
         ))}
       </List>
+
+      {/* Social icons */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 2 }}>
+        <Facebook sx={{ fontSize: 22, cursor: 'pointer', color: '#1e3a8a' }} />
+        <Instagram sx={{ fontSize: 22, cursor: 'pointer', color: '#1e3a8a' }} />
+        <YouTube sx={{ fontSize: 22, cursor: 'pointer', color: '#1e3a8a' }} />
+        <WhatsApp sx={{ fontSize: 22, cursor: 'pointer', color: '#1e3a8a' }} />
+      </Box>
     </Box>
   );
 
@@ -134,9 +145,9 @@ const Navbar = ({ selectedLocation: locationFromApp }) => {
         }}
       >
         <Container maxWidth="xl" sx={{ px: { xs: 0.5, sm: 3 }, width: '100%', maxWidth: '100%' }}>
-          <Toolbar sx={{ justifyContent: 'space-between', py: 0.5, minHeight: '48px', px: 0, width: '100%' }}>
-            {/* Logo */}
-            <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          <Toolbar sx={{ py: 0.5, minHeight: '48px', px: 0, width: '100%' }}>
+            {/* Left: logo + phone (desktop) */}
+            <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0, gap: 2 }}>
               <Box sx={{
                 bgcolor: 'white',
                 borderRadius: 1,
@@ -156,44 +167,65 @@ const Navbar = ({ selectedLocation: locationFromApp }) => {
                   }}
                 />
               </Box>
+
+              {!isMobile && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Phone sx={{ fontSize: 18, color: 'white' }} />
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    +91 92115 70030
+                  </Typography>
+                </Box>
+              )}
             </Box>
 
-            {/* Desktop Navigation */}
+            {/* Center + Right (desktop) */}
             {!isMobile && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                {navItems.map((item) => (
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexGrow: 1, ml: 6 }}>
+                {/* Center nav items */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mx: 'auto' }}>
+                  {navItems.map((item) => (
+                    <Button
+                      key={item.label}
+                      color="inherit"
+                      onClick={() => navigate(item.href)}
+                      aria-label={`Navigate to ${item.label}`}
+                      sx={{ 
+                        color: 'white',
+                        fontWeight: 500,
+                        textTransform: 'none',
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+                      }}
+                    >
+                      {item.label}
+                    </Button>
+                  ))}
+                </Box>
+
+                {/* Right: social icons + location */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 4 }}>
+                  <Facebook sx={{ fontSize: 20, cursor: 'pointer' }} />
+                  <Instagram sx={{ fontSize: 20, cursor: 'pointer' }} />
+                  <YouTube sx={{ fontSize: 20, cursor: 'pointer' }} />
+                  <WhatsApp sx={{ fontSize: 20, cursor: 'pointer' }} />
+
                   <Button
-                    key={item.label}
-                    color="inherit"
-                    href={item.href}
-                    aria-label={`Navigate to ${item.label} section`}
-                    sx={{ 
+                    onClick={() => setLocationSelectorOpen(true)}
+                    aria-label={`Current location: ${locationFromApp || selectedLocation?.name || 'Gurugram'}. Click to change location`}
+                    sx={{
                       color: 'white',
-                      fontWeight: 500,
+                      fontSize: '0.9rem',
                       textTransform: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      ml: 1,
                       '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
                     }}
                   >
-                    {item.label}
+                    {locationFromApp || selectedLocation?.name || 'Gurugram'}
+                    <KeyboardArrowDown />
                   </Button>
-                ))}
-                
-                <Button
-                  onClick={() => setLocationSelectorOpen(true)}
-                  aria-label={`Current location: ${locationFromApp || selectedLocation?.name || 'Gurugram'}. Click to change location`}
-                  sx={{
-                    color: 'white',
-                    fontSize: '0.9rem',
-                    textTransform: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
-                  }}
-                >
-                  {locationFromApp || selectedLocation?.name || 'Gurugram'}
-                  
-                </Button>
+                </Box>
               </Box>
             )}
 

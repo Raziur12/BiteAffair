@@ -100,7 +100,7 @@ const Contact = () => {
   const businessHours = BUSINESS_HOURS;
 
   return (
-    <Box id="contact" sx={{ py: 8, bgcolor: 'grey.50' }}>
+    <Box id="contact" sx={{ pt: 2, pb: 8, bgcolor: 'grey.50' }}>
       <Container maxWidth="xl">
         {/* Header */}
         <Box sx={{ textAlign: 'center', mb: 6 }}>
