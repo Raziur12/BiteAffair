@@ -1,10 +1,19 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { 
   Box, Typography, Grid, Card, CardActionArea, CardContent, TextField, Button,
   Dialog, DialogTitle, DialogContent, DialogActions, IconButton, InputAdornment
 } from '@mui/material';
 import { Cake, House, Celebration, Group, CalendarMonth, AccessTime, Close } from '@mui/icons-material';
 import { locationService } from '../../services/locationService';
+
+const occasions = [
+  { id: 'birthday', name: 'Birthday', icon: <Cake sx={{ fontSize: { xs: 28, sm: 40 } }} /> },
+  { id: 'house_party', name: 'House Party', icon: <House sx={{ fontSize: { xs: 28, sm: 40 } }} /> },
+  { id: 'pooja', name: 'Pooja', icon: <Celebration sx={{ fontSize: { xs: 28, sm: 40 } }} /> },
+  { id: 'pre_wedding', name: 'Pre-Wedding', icon: <Group sx={{ fontSize: { xs: 28, sm: 40 } }} /> },
+  { id: 'office_party', name: 'Office Party', icon: <Group sx={{ fontSize: { xs: 28, sm: 40 } }} /> },
+  { id: 'others', name: 'Others', icon: <Celebration sx={{ fontSize: { xs: 28, sm: 40 } }} /> },
+];
 
 const LocationStep = ({ onNext, updateBookingData, onLocationSelect }) => {
   const dateInputRef = useRef(null);
@@ -22,16 +31,9 @@ const LocationStep = ({ onNext, updateBookingData, onLocationSelect }) => {
   
   const locations = locationService.getAvailableLocations();
 
-  const occasions = [
-    { id: 'birthday', name: 'Birthday', icon: <Cake sx={{ fontSize: { xs: 28, sm: 40 } }} /> },
-    { id: 'house_party', name: 'House Party', icon: <House sx={{ fontSize: { xs: 28, sm: 40 } }} /> },
-    { id: 'pooja', name: 'Pooja', icon: <Celebration sx={{ fontSize: { xs: 28, sm: 40 } }} /> },
-    { id: 'pre_wedding', name: 'Pre-Wedding', icon: <Group sx={{ fontSize: { xs: 28, sm: 40 } }} /> },
-    { id: 'office_party', name: 'Office Party', icon: <Group sx={{ fontSize: { xs: 28, sm: 40 } }} /> },
-    { id: 'others', name: 'Others', icon: <Celebration sx={{ fontSize: { xs: 28, sm: 40 } }} /> },
-  ];
+  
 
-  const openDatePicker = () => {
+  const openDatePicker = useCallback(() => {
     if (dateInputRef.current) {
       if (typeof dateInputRef.current.showPicker === 'function') {
         dateInputRef.current.showPicker();
@@ -40,9 +42,9 @@ const LocationStep = ({ onNext, updateBookingData, onLocationSelect }) => {
         dateInputRef.current.click();
       }
     }
-  };
+  }, []);
 
-  const openTimePicker = (inputRef) => {
+  const openTimePicker = useCallback((inputRef) => {
     if (inputRef && inputRef.current) {
       const input = inputRef.current;
       if (typeof input.showPicker === 'function') {
@@ -52,23 +54,23 @@ const LocationStep = ({ onNext, updateBookingData, onLocationSelect }) => {
         input.click();
       }
     }
-  };
+  }, []);
 
-  const handleLocationSelect = (location) => {
+  const handleLocationSelect = useCallback((location) => {
     setSelectedLocation(location.id);
     updateBookingData({ location: location.name });
     if (onLocationSelect) {
       onLocationSelect(location.name);
     }
     setShowDateTime(true);
-  };
+  }, [onLocationSelect, updateBookingData]);
 
-  const handleOccasionSelect = (occasion) => {
+  const handleOccasionSelect = useCallback((occasion) => {
     setSelectedOccasion(occasion.id);
     updateBookingData({ occasion: occasion.name });
-  };
+  }, [updateBookingData]);
 
-  const handleDateTimeSubmit = () => {
+  const handleDateTimeSubmit = useCallback(() => {
     // Format time range like "02:00 PM - 02:30 PM"
     const timeRange = formatTimeRange(startTime, endTime);
     updateBookingData({ 
@@ -80,7 +82,7 @@ const LocationStep = ({ onNext, updateBookingData, onLocationSelect }) => {
     setTimeout(() => {
       onNext();
     }, 300);
-  };
+  }, [endTime, onNext, selectedDate, startTime, updateBookingData]);
 
   // Function to format time to 12-hour format with AM/PM
   const formatTime12Hour = (time24) => {
@@ -99,7 +101,7 @@ const LocationStep = ({ onNext, updateBookingData, onLocationSelect }) => {
   };
 
   // Auto-calculate end time (1 hour after start time)
-  const handleStartTimeChange = (newStartTime) => {
+  const handleStartTimeChange = useCallback((newStartTime) => {
     setTempStartTime(newStartTime);
     if (newStartTime) {
       const [hours, minutes] = newStartTime.split(':');
@@ -108,21 +110,21 @@ const LocationStep = ({ onNext, updateBookingData, onLocationSelect }) => {
       const endTimeFormatted = `${endHour.toString().padStart(2, '0')}:${minutes}`;
       setTempEndTime(endTimeFormatted);
     }
-  };
+  }, []);
 
   // Open time picker modal
-  const handleTimePickerOpen = () => {
+  const handleTimePickerOpen = useCallback(() => {
     setTempStartTime(startTime);
     setTempEndTime(endTime);
     setTimePickerOpen(true);
-  };
+  }, [endTime, startTime]);
 
   // Save time from modal
-  const handleTimeSave = () => {
+  const handleTimeSave = useCallback(() => {
     setStartTime(tempStartTime);
     setEndTime(tempEndTime);
     setTimePickerOpen(false);
-  };
+  }, [tempEndTime, tempStartTime]);
 
   const locationIcons = {
     delhi: '🏛️',
@@ -472,4 +474,4 @@ const LocationStep = ({ onNext, updateBookingData, onLocationSelect }) => {
   );
 };
 
-export default LocationStep;
+export default React.memo(LocationStep);

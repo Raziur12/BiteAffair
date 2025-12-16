@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import {
   Box,
   Container,
@@ -20,6 +20,11 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import orderService from '../../services/orderService';
 
+// Hoisted static styles
+const ROOT_SX = { bgcolor: '#f5f5f5', minHeight: '100vh', py: 3 };
+const PAPER_SX = { borderRadius: 3, p: 4, textAlign: 'center' };
+const HEADER_SX = { bgcolor: '#1a237e', color: 'white', p: 3, textAlign: 'center', position: 'relative' };
+
 const OrderStatus = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
@@ -27,7 +32,7 @@ const OrderStatus = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchOrderStatus = async () => {
+  const fetchOrderStatus = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -45,17 +50,16 @@ const OrderStatus = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [orderId]);
 
   useEffect(() => {
     if (orderId) {
       fetchOrderStatus();
-      
       // Poll for status updates every 30 seconds
       const interval = setInterval(fetchOrderStatus, 30000);
       return () => clearInterval(interval);
     }
-  }, [orderId]);
+  }, [orderId, fetchOrderStatus]);
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -112,23 +116,23 @@ const OrderStatus = () => {
     }
   };
 
-  const handleProceedToPayment = () => {
+  const handleProceedToPayment = useCallback(() => {
     navigate(`/bite-affair/payment?orderId=${orderId}`);
-  };
+  }, [navigate, orderId]);
 
-  const handleGoHome = () => {
+  const handleGoHome = useCallback(() => {
     navigate('/bite-affair');
-  };
+  }, [navigate]);
 
-  const handleContactSupport = () => {
+  const handleContactSupport = useCallback(() => {
     window.open('mailto:admin@biteaffairs.com?subject=Order Inquiry - ' + orderId);
-  };
+  }, [orderId]);
 
   if (loading) {
     return (
-      <Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: 3 }}>
+      <Box sx={ROOT_SX}>
         <Container maxWidth="sm">
-          <Paper elevation={3} sx={{ borderRadius: 3, p: 4, textAlign: 'center' }}>
+          <Paper elevation={3} sx={PAPER_SX}>
             <CircularProgress size={48} sx={{ mb: 2 }} />
             <Typography variant="h6" sx={{ fontFamily: 'Times New Roman, serif' }}>
               Loading order status...
@@ -141,9 +145,9 @@ const OrderStatus = () => {
 
   if (error) {
     return (
-      <Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: 3 }}>
+      <Box sx={ROOT_SX}>
         <Container maxWidth="sm">
-          <Paper elevation={3} sx={{ borderRadius: 3, p: 4, textAlign: 'center' }}>
+          <Paper elevation={3} sx={PAPER_SX}>
             <Cancel sx={{ fontSize: 48, color: '#f44336', mb: 2 }} />
             <Typography variant="h5" sx={{ mb: 2, fontFamily: 'Times New Roman, serif' }}>
               Order Not Found
@@ -171,17 +175,11 @@ const OrderStatus = () => {
   const statusInfo = getStatusMessage(orderData.status);
 
   return (
-    <Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: 3 }}>
+    <Box sx={ROOT_SX}>
       <Container maxWidth="sm">
         <Paper elevation={3} sx={{ borderRadius: 3, overflow: 'hidden' }}>
           {/* Header */}
-          <Box sx={{ 
-            bgcolor: '#1a237e', 
-            color: 'white', 
-            p: 3, 
-            textAlign: 'center',
-            position: 'relative'
-          }}>
+          <Box sx={HEADER_SX}>
             <IconButton
               onClick={handleGoHome}
               sx={{ 
@@ -339,4 +337,4 @@ const OrderStatus = () => {
   );
 };
 
-export default OrderStatus;
+export default memo(OrderStatus);

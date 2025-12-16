@@ -1,10 +1,27 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, memo } from 'react';
 import { Box, Typography, Grid, Card, CardActionArea, CardContent, IconButton, Button } from '@mui/material';
 import { Add, Remove } from '@mui/icons-material';
 
+// Hoisted: static meal types do not depend on props/state
+const MEAL_TYPES = [
+  { 
+    id: 'jain', 
+    name: 'Jain',
+    icon: '🥗' // Bowl icon for Jain food
+  },
+  { 
+    id: 'veg', 
+    name: 'Veg',
+    icon: '🥬' // Leafy greens for veg
+  },
+  { 
+    id: 'veg_nonveg', 
+    name: 'Veg + NonVeg',
+    icon: '🍗' // Chicken leg for non-veg
+  },
+];
+
 const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
-  const navigate = useNavigate();
   const [selectedMealType, setSelectedMealType] = useState(null);
   // Separate count states for each meal type
   const [pureVegCount, setPureVegCount] = useState(initialGuestCount || 1);
@@ -12,25 +29,7 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
   const [comboNonVegCount, setComboNonVegCount] = useState(initialGuestCount || 1);
   const [jainCount, setJainCount] = useState(initialGuestCount || 1);
 
-  const mealTypes = [
-    { 
-      id: 'jain', 
-      name: 'Jain',
-      icon: '🥗' // Bowl icon for Jain food
-    },
-    { 
-      id: 'veg', 
-      name: 'Veg',
-      icon: '🥬' // Leafy greens for veg
-    },
-    { 
-      id: 'veg_nonveg', 
-      name: 'Veg + NonVeg',
-      icon: '🍗' // Chicken leg for non-veg
-    },
-  ];
-
-  const handleMealTypeSelect = (meal) => {
+  const handleMealTypeSelect = useCallback((meal) => {
     setSelectedMealType(meal.id);
     
     // Only update relevant counts based on selected meal type
@@ -51,9 +50,9 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
     }
     
     updateBookingData(mealData);
-  };
+  }, [pureVegCount, comboVegCount, comboNonVegCount, jainCount, updateBookingData]);
 
-  const handleVegCountChange = (amount) => {
+  const handleVegCountChange = useCallback((amount) => {
     if (selectedMealType === 'veg') {
       const newCount = Math.max(1, pureVegCount + amount);
       setPureVegCount(newCount);
@@ -63,9 +62,9 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
       setComboVegCount(newCount);
       updateBookingData({ vegCount: newCount });
     }
-  };
+  }, [selectedMealType, pureVegCount, comboVegCount, updateBookingData]);
 
-  const handleNonVegCountChange = (change) => {
+  const handleNonVegCountChange = useCallback((change) => {
     const newCount = Math.max(1, comboNonVegCount + change);
     setComboNonVegCount(newCount);
     
@@ -73,9 +72,9 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
     if (selectedMealType === 'veg_nonveg') {
       updateBookingData({ nonVegCount: newCount });
     }
-  };
+  }, [selectedMealType, comboNonVegCount, updateBookingData]);
 
-  const handleJainCountChange = (amount) => {
+  const handleJainCountChange = useCallback((amount) => {
     const newCount = Math.max(1, jainCount + amount);
     setJainCount(newCount);
     
@@ -83,11 +82,11 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
     if (selectedMealType === 'jain') {
       updateBookingData({ jainCount: newCount });
     }
-  };
+  }, [selectedMealType, jainCount, updateBookingData]);
 
-  const handleProceed = () => {
+  const handleProceed = useCallback(() => {
     // Get the proper meal type name from the selected meal type ID
-    const selectedMeal = mealTypes.find(meal => meal.id === selectedMealType);
+    const selectedMeal = MEAL_TYPES.find(meal => meal.id === selectedMealType);
     const mealTypeName = selectedMeal ? selectedMeal.name : selectedMealType;
     
     // Save the meal type and guest count data
@@ -105,7 +104,7 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
     setTimeout(() => {
       onNext();
     }, 300);
-  };
+  }, [selectedMealType, pureVegCount, comboVegCount, comboNonVegCount, jainCount, updateBookingData, onNext]);
 
   return (
     <Box sx={{ 
@@ -139,7 +138,7 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
           margin: { sm: '0 auto', md: '0 auto' }
         }}
       >
-        {mealTypes.map((meal) => (
+        {MEAL_TYPES.map((meal) => (
           <Grid item xs={6} sm={4} md={4} key={meal.id}>
             <Card
               variant="outlined"
@@ -534,4 +533,4 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
   );
 };
 
-export default MealTypeStep;
+export default memo(MealTypeStep);

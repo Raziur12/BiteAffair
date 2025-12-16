@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, memo } from 'react';
 import { 
   Dialog, 
   DialogTitle, 
@@ -13,14 +13,21 @@ import {
 import { ArrowBack, Close } from '@mui/icons-material';
 import { useCart } from '../../context/CartContext';
 
+// Hoisted: static paper styles
+const PAPER_SX = { 
+  borderRadius: 3,
+  background: '#f8f5f0 url(https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80) center/cover',
+  backgroundBlendMode: 'overlay'
+};
+
 const PaymentModal = ({ open, onClose, onBack }) => {
   const { items, getTotalPrice } = useCart();
 
-  const handlePayNow = () => {
+  const handlePayNow = useCallback(() => {
     // Here you would integrate with payment gateway
     alert('Payment integration would be implemented here (Stripe, Razorpay, etc.)');
     onClose();
-  };
+  }, [onClose]);
 
   return (
     <Dialog
@@ -29,11 +36,7 @@ const PaymentModal = ({ open, onClose, onBack }) => {
       maxWidth="xs"
       fullWidth
       PaperProps={{
-        sx: { 
-          borderRadius: 3,
-          background: '#f8f5f0 url(https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80) center/cover',
-          backgroundBlendMode: 'overlay'
-        }
+        sx: PAPER_SX
       }}
     >
       <DialogTitle sx={{ pb: 1 }}>
@@ -113,4 +116,4 @@ const PaymentModal = ({ open, onClose, onBack }) => {
   );
 };
 
-export default PaymentModal;
+export default memo(PaymentModal);

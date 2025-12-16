@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { useCart } from '../../context/CartContext';
 import {
   Dialog,
@@ -14,6 +14,21 @@ import {
   Remove
 } from '@mui/icons-material';
 
+// Hoisted static constants
+const FALLBACK_IMG = 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80';
+
+const DIALOG_PAPER_SX = {
+  borderRadius: { xs: '16px 16px 0 0', sm: 2 },
+  maxWidth: { xs: '100%', sm: '500px' },
+  width: { xs: '100%', sm: '500px' },
+  m: { xs: 0, sm: 'auto' },
+  position: { xs: 'fixed', sm: 'relative' },
+  bottom: { xs: 0, sm: 'auto' },
+  left: { xs: 0, sm: 'auto' },
+  right: { xs: 0, sm: 'auto' },
+  maxHeight: { xs: '80vh', sm: '90vh' }
+};
+
 const ItemCustomizationModal = ({ 
   open, 
   onClose, 
@@ -28,26 +43,16 @@ const ItemCustomizationModal = ({
   const getServiceCountForItem = (item) => {
     if (!item) return guestCount?.veg || 10;
     
-    console.log('🔍 ItemModal - Checking item for service count:', item.name, {
-      isVeg: item.isVeg,
-      isNonVeg: item.isNonVeg,
-      isJain: item.isJain,
-      dietary: item.dietary
-    });
-    
     // Check if item is non-veg first (priority check)
     if (item.isNonVeg) {
-      console.log('🍗 ItemModal - Non-veg item detected, using nonVeg count:', guestCount?.nonVeg || 10);
       return guestCount?.nonVeg || 10;
     }
     // Check if item is jain
     else if (item.isJain) {
-      console.log('🌿 ItemModal - Jain item detected, using jain count:', guestCount?.jain || 1);
       return guestCount?.jain || 1;
     }
     // Default to veg (includes pure veg items and items without clear classification)
     else {
-      console.log('🥗 ItemModal - Veg item detected, using veg count:', guestCount?.veg || 10);
       return guestCount?.veg || 10;
     }
   };
@@ -68,7 +73,7 @@ const ItemCustomizationModal = ({
     }
   }, [open, item, guestCount]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = useCallback(() => {
     if (!item) return;
     
     // Determine serves/guest count for this item
@@ -96,7 +101,7 @@ const ItemCustomizationModal = ({
     
     onAddToCart(customizedItem);
     onClose();
-  };
+  }, [item, serves, quantity, onAddToCart, onClose]);
 
   if (!item) return null;
 
@@ -106,17 +111,7 @@ const ItemCustomizationModal = ({
       onClose={onClose}
       maxWidth={false}
       PaperProps={{
-        sx: {
-          borderRadius: { xs: '16px 16px 0 0', sm: 2 },
-          maxWidth: { xs: '100%', sm: '500px' },
-          width: { xs: '100%', sm: '500px' },
-          m: { xs: 0, sm: 'auto' },
-          position: { xs: 'fixed', sm: 'relative' },
-          bottom: { xs: 0, sm: 'auto' },
-          left: { xs: 0, sm: 'auto' },
-          right: { xs: 0, sm: 'auto' },
-          maxHeight: { xs: '80vh', sm: '90vh' }
-        }
+        sx: DIALOG_PAPER_SX
       }}
       sx={{
         '& .MuiDialog-container': {
@@ -137,7 +132,7 @@ const ItemCustomizationModal = ({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
           <Box
             component="img"
-            src={item.image || 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80'}
+            src={item.image || FALLBACK_IMG}
             alt={item.name}
             sx={{
               width: 60,
@@ -146,7 +141,7 @@ const ItemCustomizationModal = ({
               objectFit: 'cover'
             }}
             onError={(e) => {
-              e.target.src = 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80';
+              e.target.src = FALLBACK_IMG;
             }}
           />
           <Box sx={{ flex: 1 }}>
@@ -274,4 +269,4 @@ const ItemCustomizationModal = ({
   );
 };
 
-export default ItemCustomizationModal;
+export default memo(ItemCustomizationModal);

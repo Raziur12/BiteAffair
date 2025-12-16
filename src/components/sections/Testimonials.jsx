@@ -14,10 +14,8 @@ import {
   FormatQuote
 } from '@mui/icons-material';
 
-const Testimonials = () => {
-  const theme = useTheme();
-
-  const testimonials = [
+// Hoisted static testimonials content
+const TESTIMONIALS = [
     {
       name: 'Priya Sharma',
       role: 'Event Organizer',
@@ -66,7 +64,10 @@ const Testimonials = () => {
       review: 'Fantastic cocktail party catering! The presentation was elegant and the taste was outstanding. Our guests couldn\'t stop praising the food quality.',
       event: 'Cocktail Party'
     }
-  ];
+];
+
+const Testimonials = () => {
+  const theme = useTheme();
 
   return (
     <Box id="testimonials" sx={{ py: 8, bgcolor: 'background.paper' }}>
@@ -99,7 +100,7 @@ const Testimonials = () => {
 
         {/* Testimonials Grid */}
         <Grid container spacing={4}>
-          {testimonials.map((testimonial, index) => (
+          {TESTIMONIALS.map((testimonial, index) => (
             <Grid item xs={12} md={6} lg={4} key={index}>
               <Card
                 sx={{

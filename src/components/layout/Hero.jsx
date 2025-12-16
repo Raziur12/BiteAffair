@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, memo } from 'react';
 import {
   Box,
   Container,
@@ -6,8 +6,11 @@ import {
   Button
 } from '@mui/material';
 
+// Hoisted static background URL
+const HERO_BG_URL = 'url("https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=2400&q=80")';
+
 const Hero = ({ onStartBooking }) => {
-  const handleBuildOrder = () => {
+  const handleBuildOrder = useCallback(() => {
     const menuSection = document.getElementById('menu');
     if (menuSection) {
       menuSection.scrollIntoView({ 
@@ -15,7 +18,7 @@ const Hero = ({ onStartBooking }) => {
         block: 'start'
       });
     }
-  };
+  }, []);
 
   return (
     <>
@@ -28,7 +31,7 @@ const Hero = ({ onStartBooking }) => {
           maxWidth: '100vw',
           overflow: 'hidden',
           position: 'relative',
-          backgroundImage: 'url("https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=2400&q=80")',
+          backgroundImage: HERO_BG_URL,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',

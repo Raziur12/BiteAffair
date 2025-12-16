@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import CartModal from '../cart/CartModal';
 import CheckoutConfirmation from '../cart/CheckoutConfirmation';
 import PaymentModal from '../booking/PaymentModal';
@@ -7,28 +7,28 @@ const OrderFlowManager = ({ cartOpen, onCartClose, bookingConfig }) => {
   const [currentStep, setCurrentStep] = useState('cart'); // 'cart', 'checkout', 'payment'
   const [checkoutData, setCheckoutData] = useState(null);
 
-  const handleCartCheckout = () => {
+  const handleCartCheckout = useCallback(() => {
     setCurrentStep('checkout');
-  };
+  }, []);
 
-  const handleCheckoutBack = () => {
+  const handleCheckoutBack = useCallback(() => {
     setCurrentStep('cart');
-  };
+  }, []);
 
-  const handleCheckoutConfirm = (data) => {
+  const handleCheckoutConfirm = useCallback((data) => {
     setCheckoutData(data);
     setCurrentStep('payment');
-  };
+  }, []);
 
-  const handlePaymentBack = () => {
+  const handlePaymentBack = useCallback(() => {
     setCurrentStep('checkout');
-  };
+  }, []);
 
-  const handleCloseAll = () => {
+  const handleCloseAll = useCallback(() => {
     setCurrentStep('cart');
     setCheckoutData(null);
     onCartClose();
-  };
+  }, [onCartClose]);
 
   return (
     <>
@@ -58,4 +58,4 @@ const OrderFlowManager = ({ cartOpen, onCartClose, bookingConfig }) => {
   );
 };
 
-export default OrderFlowManager;
+export default memo(OrderFlowManager);

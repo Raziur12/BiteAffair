@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -91,7 +91,6 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
         }
       }
     } catch (e) {
-      console.warn('guestCount localStorage read failed', e);
     }
     return { veg: 10, nonVeg: 8, jain: 1 };
   });
@@ -160,18 +159,9 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
     try {
       localStorage.setItem('biteAffair_guestCount', JSON.stringify(guestCount));
     } catch (e) {
-      console.warn('guestCount localStorage write failed', e);
     }
   }, [guestCount]);
 
-  // TEMP DEBUG: Log guest count updates to trace flow
-  useEffect(() => {
-    console.log('👥 Guest Count Updated:', {
-      veg: guestCount.veg,
-      nonVeg: guestCount.nonVeg,
-      jain: guestCount.jain
-    });
-  }, [guestCount]);
 
   // Load services and testimonials data
   useEffect(() => {
@@ -181,7 +171,6 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
       if (componentData.services && componentData.services.length > 0) {
         setServices(componentData.services);
       } else {
-        console.warn('⚠️ PartyPlatters: No services data loaded, using fallback');
         // Fallback services data
         setServices([
           {
@@ -198,7 +187,6 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
       if (componentData.testimonials && componentData.testimonials.length > 0) {
         setTestimonials(componentData.testimonials);
       } else {
-        console.warn('⚠️ PartyPlatters: No testimonials data loaded, using fallback');
         // Fallback testimonials data
         setTestimonials([
           {
@@ -480,7 +468,7 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
       return menuData;
     }
 
-    console.warn('⚠️ getAllItems: Unknown menu data structure:', menuData);
+    
     return [];
   };
 
@@ -619,12 +607,9 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
   const handleAddToCart = (item) => {
     if (selectedMenu === 'veg') {
       // For Veg menu, detect package type from item and set vegMenuType accordingly
-      console.log('🎯 handleAddToCart: Item:', item.title, 'PackageType:', item.packageType, 'Current vegMenuType:', vegMenuType);
       if (item.packageType) {
-        console.log('🎯 Setting vegMenuType to:', item.packageType);
         setVegMenuType(item.packageType);
       } else {
-        console.log('⚠️ Item has no packageType, keeping current vegMenuType:', vegMenuType);
       }
       // Open package customization modal with pre-selected item
       setSelectedItem(item);
@@ -653,25 +638,24 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
   };
 
   // Navigation functions for service cards
-  const handlePrevService = () => {
+  const handlePrevService = useCallback(() => {
     setCurrentServiceIndex((prev) => (prev > 0 ? prev - 1 : services.length - 1));
-  };
+  }, [services.length]);
 
-  const handleNextService = () => {
+  const handleNextService = useCallback(() => {
     setCurrentServiceIndex((prev) => (prev < services.length - 1 ? prev + 1 : 0));
-  };
+  }, [services.length]);
 
   // Toggle collapse state for category sections
-  const toggleSectionCollapse = (category) => {
+  const toggleSectionCollapse = useCallback((category) => {
     setCollapsedSections(prev => ({
       ...prev,
       [category]: !prev[category]
     }));
-  };
+  }, []);
 
   // Handle guest count changes
   const handleGuestCountChange = (type, value) => {
-    console.log(`🎯 PartyPlatters: handleGuestCountChange called - ${type}: ${value}`);
     // Mark as user edit to prevent immediate sync
     userEditRef.current = true;
     lastUserEditAt.current = Date.now();
@@ -681,7 +665,6 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
         ...prev,
         [type]: Math.max(1, parseInt(value))
       };
-      console.log('✅ Updated guest count:', newCount);
       return newCount;
     });
 
@@ -738,7 +721,6 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
     // Release lock after short delay to allow sync to resume
     setTimeout(() => { 
       userEditRef.current = false;
-      console.log('🔓 Lock released - sync can resume');
     }, 350);
   };
   // Sync cart items with guest count changes
@@ -752,7 +734,7 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
         return;
       }
     }
-    console.log('🔄 Syncing cart items with guest count:', guestCount);
+    
 
     // Update all cart items to reflect new guest counts
     cartItems.forEach(item => {
@@ -773,7 +755,6 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
 
       // Only update if the quantity doesn't match the target guest count
       if (parseInt(item.quantity) !== targetGuestCount) {
-        console.log(`🔄 Updating ${item.name}: ${item.quantity} → ${targetGuestCount}`);
 
         // Recalculate price and quantity
         const unitPrice = item.calculatedPrice || item.price || item.basePrice || 0;
@@ -834,7 +815,6 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
 
       <Container maxWidth="lg" sx={{ py: { xs: 3, sm: 4, md: 5 }, px: { xs: 1, sm: 2 }, width: '100%', maxWidth: '100%' }}>
 
-      // ... rest of the code remains the same ...
         {/* Search Bar and Menu Dropdown in Same Row */}
         <Box sx={{ mb: 1, display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}>
           <TextField
@@ -1607,6 +1587,8 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
                                 component="img"
                                 image={customizationMenuService.getItemImage(item.image, item.name)}
                                 alt={item.name}
+                                loading="lazy"
+                                decoding="async"
                                 sx={{
                                   width: '100%',
                                   height: 160,
@@ -2063,6 +2045,8 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
                                   component="img"
                                   image={customizationMenuService.getItemImage(item.image, item.name)}
                                   alt={item.name}
+                                  loading="lazy"
+                                  decoding="async"
                                   sx={{
                                     width: 150,
                                     height: 150,
@@ -2097,256 +2081,6 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
             </Typography>
           </Box>
         )}
-
-        {/* Bespoke Services Section */}
-        <Box
-          sx={{
-            mt: 6,
-            mb: 4,
-            py: 6,
-            px: 3,
-            backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            borderRadius: 3,
-            position: 'relative'
-          }}
-        >
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: 'bold',
-              color: 'white',
-              mb: 1,
-              textAlign: 'center'
-            }}
-          >
-            Bespoke Services
-          </Typography>
-          <Typography
-            variant="body1"
-            sx={{
-              color: 'rgba(255, 255, 255, 0.9)',
-              textAlign: 'center',
-              mb: 4,
-              maxWidth: '600px',
-              mx: 'auto',
-              lineHeight: 1.6
-            }}
-          >
-            Bite Affair offers professional, well-trained party waiters, bartenders, and bespoke services staff to
-            elevate your specific party needs and guarantee seamless service that matches the energy and elegance of your gathering.
-          </Typography>
-
-          <Box sx={{ position: 'relative', px: { xs: 2, sm: 6 } }}>
-            {/* Left Arrow Button */}
-            <IconButton
-              onClick={handlePrevService}
-              sx={{
-                position: 'absolute',
-                left: { xs: -10, sm: 0 },
-                top: '50%',
-                transform: 'translateY(-50%)',
-                zIndex: 2,
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                color: '#1a237e',
-                width: { xs: 32, sm: 40 },
-                height: { xs: 32, sm: 40 },
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 1)',
-                  transform: 'translateY(-50%) scale(1.1)',
-                },
-                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                transition: 'all 0.3s ease'
-              }}
-            >
-              <ChevronLeft sx={{ fontSize: { xs: 20, sm: 24 } }} />
-            </IconButton>
-
-            {/* Right Arrow Button */}
-            <IconButton
-              onClick={handleNextService}
-              sx={{
-                position: 'absolute',
-                right: { xs: -10, sm: 0 },
-                top: '50%',
-                transform: 'translateY(-50%)',
-                zIndex: 2,
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                color: '#1a237e',
-                width: { xs: 32, sm: 40 },
-                height: { xs: 32, sm: 40 },
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 1)',
-                  transform: 'translateY(-50%) scale(1.1)',
-                },
-                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                transition: 'all 0.3s ease'
-              }}
-            >
-              <ChevronRight sx={{ fontSize: { xs: 20, sm: 24 } }} />
-            </IconButton>
-
-            <Box
-              sx={{
-                display: 'flex',
-                gap: 2,
-                overflowX: 'hidden',
-                pb: 2,
-                position: 'relative',
-                width: '100%',
-                maxWidth: { xs: '280px', sm: '580px', md: '870px' }, // Show 1, 2, or 3 cards max
-                mx: 'auto'
-              }}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  gap: 2,
-                  transform: `translateX(-${currentServiceIndex * 296}px)`, // 280px card + 16px gap
-                  transition: 'transform 0.3s ease-in-out',
-                }}
-              >
-                {services.map((service) => (
-                  <Card
-                    key={service.id}
-                    sx={{
-                      minWidth: { xs: 260, sm: 280 },
-                      maxWidth: { xs: 260, sm: 280 },
-                      height: 'auto',
-                      borderRadius: 3,
-                      boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
-                      transition: 'all 0.3s ease',
-                      flexShrink: 0,
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
-                      }
-                    }}
-                  >
-                    <CardMedia
-                      component="img"
-                      image={service.image}
-                      alt={service.title}
-                      sx={{
-                        height: 180,
-                        objectFit: 'cover'
-                      }}
-                    />
-                    <CardContent sx={{ p: 3 }}>
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontWeight: 'bold',
-                          mb: 1,
-                          color: '#1a237e',
-                          fontSize: '1.1rem'
-                        }}
-                      >
-                        {service.title}
-                      </Typography>
-
-                      {/* Rating */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <Box sx={{ mr: 1, display: 'flex' }}>
-                          {[...Array(5)].map((_, i) => (
-                            <Typography
-                              key={i}
-                              sx={{
-                                color: i < Math.floor(service.rating) ? '#ffc107' : '#e0e0e0',
-                                fontSize: '1rem'
-                              }}
-                            >
-                              ★
-                            </Typography>
-                          ))}
-                        </Box>
-                        <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
-                          {service.rating}
-                        </Typography>
-                      </Box>
-
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mb: 3, lineHeight: 1.5, fontSize: '0.875rem' }}
-                      >
-                        {service.description}
-                      </Typography>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Box>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              fontWeight: 'bold',
-                              color: '#1a237e',
-                              fontSize: '1rem'
-                            }}
-                          >
-                            ₹{service.calculatedPrice || service.basePrice}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              fontSize: '0.7rem',
-                              color: 'text.secondary'
-                            }}
-                          >
-                            For {service.guestCount || parseInt(guestCount.veg)} guests
-                          </Typography>
-                        </Box>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCustomizedItemAdd(service);
-                          }}
-                          sx={{
-                            bgcolor: '#1976d2',
-                            color: 'white',
-                            borderRadius: '20px',
-                            px: 2.5,
-                            py: 0.5,
-                            fontSize: '0.875rem',
-                            '&:hover': {
-                              bgcolor: '#1565c0'
-                            }
-                          }}
-                        >
-                          Add
-                        </Button>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                ))}
-              </Box>
-            </Box>
-          </Box>
-
-          {/* Dot Navigation */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, gap: 1 }}>
-            {services.map((_, index) => (
-              <Box
-                key={index}
-                onClick={() => setCurrentServiceIndex(index)}
-                sx={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: '50%',
-                  backgroundColor: currentServiceIndex === index ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.4)',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                    transform: 'scale(1.2)'
-                  }
-                }}
-              />
-            ))}
-          </Box>
-        </Box>
 
         {/* Cart Summary */}
         <CartSummary onViewCart={onOpenCart || (() => setEnhancedCheckoutOpen(true))} />

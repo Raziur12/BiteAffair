@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import {
   Box,
   Container,
@@ -20,47 +20,48 @@ import {
   Phone
 } from '@mui/icons-material';
 
+// Hoisted static content
+const FEATURES = [
+  {
+    icon: <Restaurant sx={{ fontSize: 48, color: 'primary.main' }} />,
+    title: 'Premium Quality Food',
+    description: 'We use only the freshest ingredients and authentic recipes to create memorable dining experiences for your special occasions.'
+  },
+  {
+    icon: <LocalShipping sx={{ fontSize: 48, color: 'primary.main' }} />,
+    title: 'Reliable Delivery',
+    description: 'Timely and safe delivery across Gurugram with proper packaging to maintain food quality and temperature.'
+  },
+  {
+    icon: <Groups sx={{ fontSize: 48, color: 'primary.main' }} />,
+    title: 'Expert Team',
+    description: 'Our experienced chefs and catering professionals ensure every event is handled with utmost care and attention to detail.'
+  },
+  {
+    icon: <Star sx={{ fontSize: 48, color: 'primary.main' }} />,
+    title: 'Customer Satisfaction',
+    description: 'With 4.8/5 customer rating, we pride ourselves on exceeding expectations and creating delightful food experiences.'
+  }
+];
+
+const STATS = [
+  { number: '500+', label: 'Happy Customers' },
+  { number: '1000+', label: 'Events Catered' },
+  { number: '4.8/5', label: 'Customer Rating' },
+  { number: '3+', label: 'Years Experience' }
+];
+
+const SERVICES = [
+  'Corporate Events & Meetings',
+  'Birthday Parties & Celebrations',
+  'Wedding Functions & Receptions',
+  'Festival & Religious Gatherings',
+  'House Parties & Get-togethers',
+  'Office Lunch & Dinner Catering'
+];
+
 const About = () => {
   const theme = useTheme();
-
-  const features = [
-    {
-      icon: <Restaurant sx={{ fontSize: 48, color: 'primary.main' }} />,
-      title: 'Premium Quality Food',
-      description: 'We use only the freshest ingredients and authentic recipes to create memorable dining experiences for your special occasions.'
-    },
-    {
-      icon: <LocalShipping sx={{ fontSize: 48, color: 'primary.main' }} />,
-      title: 'Reliable Delivery',
-      description: 'Timely and safe delivery across Gurugram with proper packaging to maintain food quality and temperature.'
-    },
-    {
-      icon: <Groups sx={{ fontSize: 48, color: 'primary.main' }} />,
-      title: 'Expert Team',
-      description: 'Our experienced chefs and catering professionals ensure every event is handled with utmost care and attention to detail.'
-    },
-    {
-      icon: <Star sx={{ fontSize: 48, color: 'primary.main' }} />,
-      title: 'Customer Satisfaction',
-      description: 'With 4.8/5 customer rating, we pride ourselves on exceeding expectations and creating delightful food experiences.'
-    }
-  ];
-
-  const stats = [
-    { number: '500+', label: 'Happy Customers' },
-    { number: '1000+', label: 'Events Catered' },
-    { number: '4.8/5', label: 'Customer Rating' },
-    { number: '3+', label: 'Years Experience' }
-  ];
-
-  const services = [
-    'Corporate Events & Meetings',
-    'Birthday Parties & Celebrations',
-    'Wedding Functions & Receptions',
-    'Festival & Religious Gatherings',
-    'House Parties & Get-togethers',
-    'Office Lunch & Dinner Catering'
-  ];
 
   return (
     <Box id="about" sx={{ py: 8, bgcolor: 'grey.50' }}>
@@ -94,7 +95,7 @@ const About = () => {
 
         {/* Stats */}
         <Grid container spacing={4} sx={{ mb: 8 }}>
-          {stats.map((stat, index) => (
+          {STATS.map((stat, index) => (
             <Grid item xs={6} md={3} key={index}>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography
@@ -117,7 +118,7 @@ const About = () => {
 
         {/* Features */}
         <Grid container spacing={4} sx={{ mb: 8 }}>
-          {features.map((feature, index) => (
+          {FEATURES.map((feature, index) => (
             <Grid item xs={12} md={6} key={index}>
               <Card
                 sx={{
@@ -162,7 +163,7 @@ const About = () => {
                 Our Services
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {services.map((service, index) => (
+                {SERVICES.map((service, index) => (
                   <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <CheckCircle sx={{ color: 'success.main', fontSize: 20 }} />
                     <Typography variant="body1">{service}</Typography>

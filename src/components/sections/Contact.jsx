@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -21,6 +21,44 @@ import {
   Send
 } from '@mui/icons-material';
 
+// Hoisted static content
+const CONTACT_INFO = [
+  {
+    icon: <Phone sx={{ fontSize: 32, color: 'primary.main' }} />,
+    title: 'Call Us',
+    details: '+91 92115 70030',
+    action: 'tel:+919211570030',
+    description: 'Available 24/7 for your catering needs'
+  },
+  {
+    icon: <WhatsApp sx={{ fontSize: 32, color: '#25D366' }} />,
+    title: 'WhatsApp',
+    details: '+91 92115 70030',
+    action: 'https://wa.me/919211570030',
+    description: 'Quick responses and instant quotes'
+  },
+  {
+    icon: <Email sx={{ fontSize: 32, color: 'primary.main' }} />,
+    title: 'Email',
+    details: 'info@biteaffair.com',
+    action: 'mailto:info@biteaffair.com',
+    description: 'Send us your detailed requirements'
+  },
+  {
+    icon: <LocationOn sx={{ fontSize: 32, color: 'primary.main' }} />,
+    title: 'Service Area',
+    details: 'Gurugram, Haryana',
+    action: null,
+    description: 'Complete coverage across Gurugram'
+  }
+];
+
+const BUSINESS_HOURS = [
+  { day: 'Monday - Friday', hours: '9:00 AM - 10:00 PM' },
+  { day: 'Saturday - Sunday', hours: '8:00 AM - 11:00 PM' },
+  { day: 'Holidays', hours: '8:00 AM - 11:00 PM' }
+];
+
 const Contact = () => {
   const theme = useTheme();
   const [formData, setFormData] = useState({
@@ -34,14 +72,15 @@ const Contact = () => {
   });
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  const handleInputChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = useCallback((e) => {
     e.preventDefault();
     // In a real app, this would send data to a backend
     setShowSuccess(true);
@@ -55,44 +94,10 @@ const Contact = () => {
       guestCount: '',
       message: ''
     });
-  };
+  }, []);
 
-  const contactInfo = [
-    {
-      icon: <Phone sx={{ fontSize: 32, color: 'primary.main' }} />,
-      title: 'Call Us',
-      details: '+91 92115 70030',
-      action: 'tel:+919211570030',
-      description: 'Available 24/7 for your catering needs'
-    },
-    {
-      icon: <WhatsApp sx={{ fontSize: 32, color: '#25D366' }} />,
-      title: 'WhatsApp',
-      details: '+91 92115 70030',
-      action: 'https://wa.me/919211570030',
-      description: 'Quick responses and instant quotes'
-    },
-    {
-      icon: <Email sx={{ fontSize: 32, color: 'primary.main' }} />,
-      title: 'Email',
-      details: 'info@biteaffair.com',
-      action: 'mailto:info@biteaffair.com',
-      description: 'Send us your detailed requirements'
-    },
-    {
-      icon: <LocationOn sx={{ fontSize: 32, color: 'primary.main' }} />,
-      title: 'Service Area',
-      details: 'Gurugram, Haryana',
-      action: null,
-      description: 'Complete coverage across Gurugram'
-    }
-  ];
-
-  const businessHours = [
-    { day: 'Monday - Friday', hours: '9:00 AM - 10:00 PM' },
-    { day: 'Saturday - Sunday', hours: '8:00 AM - 11:00 PM' },
-    { day: 'Holidays', hours: '8:00 AM - 11:00 PM' }
-  ];
+  const contactInfo = CONTACT_INFO;
+  const businessHours = BUSINESS_HOURS;
 
   return (
     <Box id="contact" sx={{ py: 8, bgcolor: 'grey.50' }}>

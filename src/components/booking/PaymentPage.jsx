@@ -1,21 +1,25 @@
-import React from 'react';
+import React, { useCallback, memo } from 'react';
 import { Box, Container, Paper, Typography, Button, Divider, IconButton } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 
+// Hoisted: static style objects
+const ROOT_SX = { bgcolor: '#f5f5f5', minHeight: '100vh', py: 5 };
+const PAPER_SX = { borderRadius: 3, p: 4 };
+
 const PaymentPage = () => {
   const { items, getTotalPrice } = useCart();
   const navigate = useNavigate();
 
-  const handleGoBack = () => {
+  const handleGoBack = useCallback(() => {
     navigate('/bite-affair/checkout'); // Go back to checkout page
-  };
+  }, [navigate]);
 
   return (
-    <Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: 5 }}>
+    <Box sx={ROOT_SX}>
       <Container maxWidth="sm">
-        <Paper elevation={3} sx={{ borderRadius: 3, p: 4 }}>
+        <Paper elevation={3} sx={PAPER_SX}>
           {/* Back Button */}
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
             <IconButton 
@@ -75,4 +79,4 @@ const PaymentPage = () => {
   );
 };
 
-export default PaymentPage;
+export default memo(PaymentPage);

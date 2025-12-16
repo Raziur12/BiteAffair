@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, memo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -58,17 +58,13 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
   // Update state when bookingConfig changes
   React.useEffect(() => {
     if (bookingConfig) {
-      console.log('📅 CartModal: Received bookingConfig:', bookingConfig);
       if (bookingConfig.eventDate) {
-        console.log('📅 Setting delivery date to:', bookingConfig.eventDate);
         setDeliveryDate(bookingConfig.eventDate);
       }
       if (bookingConfig.eventTime) {
-        console.log('⏰ Setting delivery time to:', bookingConfig.eventTime);
         setDeliveryTime(bookingConfig.eventTime);
       }
       if (bookingConfig.location) {
-        console.log('📍 Setting location to:', bookingConfig.location);
         setLocation(bookingConfig.location);
       }
     }
@@ -86,13 +82,13 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
     }
   }, [resendTimer, showOTP]);
 
-  const handleQuantityChange = (id, newQuantity) => {
+  const handleQuantityChange = useCallback((id, newQuantity) => {
     const item = items.find(i => i.id === id);
     if (!item) return;
 
     const previousQuantity = parseInt(item.quantity) || 0;
     const delta = newQuantity - previousQuantity;
-    console.log(`🛒 CartModal: Changing ${item.name} quantity: ${previousQuantity} → ${newQuantity} (delta: ${delta})`);
+    
 
     // Determine which guest type to update
     let guestType = 'veg';
@@ -107,7 +103,7 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
     }
 
     const newGuestCount = Math.max(1, newQuantity);
-    console.log(`🎯 CartModal → PartyPlatters: Updating ${guestType} guest count to ${newGuestCount}`);
+    
 
     // 1) Propagate to parent first so sync uses the new guestCount
     if (onGuestCountChange) onGuestCountChange(guestType, newGuestCount);
@@ -128,13 +124,13 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
 
     // Skip guest count propagation for addons
     if (item.isAddon) {
-      console.log('⏭️ Skipping guest count update (addon)');
+      
       return;
     }
 
     // Skip guest count propagation for Breads & Desserts
     if (item.category === 'breads' || item.category === 'desserts') {
-      console.log('🥖🍰 Skipping guest count update (breads/desserts)');
+      
       return;
     }
 
@@ -144,7 +140,7 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
     }
 
     // We already propagated above; nothing more to do here
-  };
+  }, [items, removeItem, updateQuantity, selectedMenu, onGuestCountChange, guestCount]);
 
   const handleSendOTP = async () => {
     if (phoneNumber.trim()) {
@@ -156,9 +152,7 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
       }
       
       try {
-        console.log('Sending OTP to:', phoneNumber);
         const result = await otpService.sendOTP(phoneNumber);
-        console.log('OTP Service Result:', result);
         
         if (result.success) {
           setShowOTP(true);
@@ -326,7 +320,6 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
     // Send order details to WhatsApp
     try {
       const result = await whatsappService.sendOrderDetails(phoneNumber, orderData);
-      console.log('WhatsApp result:', result);
     } catch (error) {
       console.error('Failed to send WhatsApp message:', error);
     }
@@ -554,10 +547,6 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
                         <Typography 
                           variant="caption" 
                           onClick={() => {
-                            console.log('🛒 Edit button clicked for package:', item.name);
-                            console.log('🛒 Full item data:', item);
-                            console.log('🛒 Selected items:', item.selectedItems);
-                            console.log('🛒 Package details:', item.packageDetails);
                             // Close the cart and navigate to menu with package data for editing
                             onClose();
                             const pkgType = item.packageType === 'premium' ? 'premium' : 'standard';
@@ -1006,4 +995,4 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
   );
 };
 
-export default CartModal;
+export default memo(CartModal);

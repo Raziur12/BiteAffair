@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,20 @@ import {
 import { Close, Add, Remove, Star, Warning } from '@mui/icons-material';
 import { vegMenuStandard499, vegMenuPremium499 } from '../../data/Veg-menu';
 
+// Hoisted static constants
+const PACKAGE_LIMITS = {
+  starters: 3,
+  main: 3,
+  rice: 1,
+  breads: 2,
+  dessert: 1
+};
+
+const PACKAGE_PRICING = {
+  standard: { price: 499, name: 'Standard Menu Veg (499)' },
+  premium: { price: 499, name: 'Premium Menu Veg (499)' }
+};
+
 const VegPackageModal = ({ 
   open, 
   onClose, 
@@ -34,26 +48,15 @@ const VegPackageModal = ({
   
   // Sync internal packageType state with prop changes
   useEffect(() => {
-    console.log('🔄 VegPackageModal: Prop initialPackageType:', initialPackageType, 'Current state packageType:', packageType);
     if (initialPackageType !== packageType) {
-      console.log('🔄 VegPackageModal: Updating packageType from', packageType, 'to', initialPackageType);
       setPackageType(initialPackageType);
     }
   }, [initialPackageType]);
   // Package limits based on your spreadsheet
-  const packageLimits = {
-    starters: 3,
-    main: 3,
-    rice: 1,
-    breads: 2,
-    dessert: 1
-  };
+  const packageLimits = PACKAGE_LIMITS;
 
   // Package pricing (per guest)
-  const packagePricing = {
-    standard: { price: 499, name: 'Standard Menu Veg (499)' },
-    premium: { price: 499, name: 'Premium Menu Veg (499)' }
-  };
+  const packagePricing = PACKAGE_PRICING;
 
   // Get menu items based on package type from Veg-menu.js
   const getPackageMenuItems = () => {
@@ -175,16 +178,13 @@ const VegPackageModal = ({
         const editingPackageData = sessionStorage.getItem('editingPackage');
         if (editingPackageData) {
           const packageData = JSON.parse(editingPackageData);
-          console.log('🔄 Restoring package data for editing:', packageData);
           
           // Try to restore selected items from multiple possible sources
           let restoredItems = null;
           
           if (packageData.selectedItems && Object.keys(packageData.selectedItems).length > 0) {
-            console.log('✅ Using selectedItems from package data');
             restoredItems = packageData.selectedItems;
           } else if (packageData.packageDetails) {
-            console.log('✅ Converting packageDetails to selectedItems format');
             // Convert packageDetails back to selectedItems format
             // We need to find the actual items from the menu data
             const menuItems = getPackageMenuItems();
@@ -211,26 +211,22 @@ const VegPackageModal = ({
                 
                 if (foundItem) {
                   restoredItems[category].push(foundItem);
-                  console.log(`✅ Restored ${category} item:`, foundItem.title || foundItem.name);
                 } else {
-                  console.warn(`❌ Could not find menu item for: ${itemName} in category: ${category}`);
+                  
                 }
               });
             });
           }
           
           if (restoredItems) {
-            console.log('🔄 Setting restored items:', restoredItems);
             // Add a small delay to ensure the modal and menu items are fully rendered
             setTimeout(() => {
               setSelectedItems(restoredItems);
               setIsEditing(true);
               setEditingItemId(packageData.fullItem?.id);
-              console.log('✅ Restored items applied with delay');
-              console.log('✅ Set editing mode with item ID:', packageData.fullItem?.id);
             }, 200);
           } else {
-            console.warn('❌ No valid package data found for restoration');
+            
           }
           
           // Clear the sessionStorage after using it
@@ -444,7 +440,6 @@ const VegPackageModal = ({
 
     // If editing, remove the old item first
     if (isEditing && editingItemId && onRemoveFromCart) {
-      console.log('🗑️ Removing old package item:', editingItemId);
       onRemoveFromCart(editingItemId);
     }
     

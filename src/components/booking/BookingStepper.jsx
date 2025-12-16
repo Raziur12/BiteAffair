@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Stepper, Step, StepLabel, StepIcon } from '@mui/material';
+import { Box, Typography, Stepper, Step, StepLabel } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { LocationOn, Restaurant, CurrencyRupee, CreditCard } from '@mui/icons-material';
 
@@ -29,7 +29,7 @@ const CustomStepIconRoot = styled('div')(({ theme, ownerState }) => ({
   }),
 }));
 
-function CustomStepIcon(props) {
+const CustomStepIcon = React.memo(function CustomStepIcon(props) {
   const { active, completed, className } = props;
 
   const icons = {
@@ -44,9 +44,9 @@ function CustomStepIcon(props) {
       {icons[String(props.icon)] || <CreditCard sx={{ fontSize: 24 }} />}
     </CustomStepIconRoot>
   );
-}
+});
 
-const BookingStepper = ({ activeStep, steps }) => {
+const BookingStepper = React.memo(({ activeStep, steps }) => {
   return (
     <Box sx={{ p: { xs: 2, sm: 3 }, textAlign: 'center', bgcolor: 'white' }}>
       <Stepper 
@@ -91,6 +91,6 @@ const BookingStepper = ({ activeStep, steps }) => {
       </Stepper>
     </Box>
   );
-};
+});
 
 export default BookingStepper;

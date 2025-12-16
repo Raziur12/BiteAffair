@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -18,6 +18,15 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import orderService from '../../services/orderService';
 
+// Hoisted static styles
+const FULLPAGE_ROOT_SX = { bgcolor: '#f5f5f5', minHeight: '100vh', py: 3 };
+const FULLPAGE_PAPER_SX = { borderRadius: 3, p: 4 };
+const MODAL_PAPER_SX = {
+  borderRadius: 3,
+  background: '#f8f5f0 url(https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80) center/cover',
+  backgroundBlendMode: 'overlay'
+};
+
 const CheckoutConfirmation = ({ open, onClose, onConfirm }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -31,19 +40,19 @@ const CheckoutConfirmation = ({ open, onClose, onConfirm }) => {
   // Check if this is being rendered as a full page (route-based) or as a modal
   const isFullPage = location.pathname === '/bite-affair/checkout';
   
-  const handleGoBack = () => {
+  const handleGoBack = useCallback(() => {
     navigate('/bite-affair/cart');
-  };
+  }, [navigate]);
 
   // Generate unique order ID
-  const generateOrderId = () => {
+  const generateOrderId = useCallback(() => {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substr(2, 5);
     return `ORD-${timestamp}-${random.toUpperCase()}`;
-  };
+  }, []);
 
   // Prepare order data for submission
-  const prepareOrderData = () => {
+  const prepareOrderData = useCallback(() => {
     const orderId = generateOrderId();
     const timestamp = new Date().toISOString();
     const totalAmount = getTotalPrice();
@@ -77,7 +86,7 @@ const CheckoutConfirmation = ({ open, onClose, onConfirm }) => {
         timestamp: timestamp
       }
     };
-  };
+  }, [name, email, phone, items, getTotalPrice, generateOrderId]);
 
   const validate = () => {
     const newErrors = {};
@@ -96,7 +105,7 @@ const CheckoutConfirmation = ({ open, onClose, onConfirm }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleConfirm = async () => {
+  const handleConfirm = useCallback(async () => {
     if (!validate()) return;
 
     setLoading(true);
@@ -104,13 +113,11 @@ const CheckoutConfirmation = ({ open, onClose, onConfirm }) => {
     try {
       // Step 1: Prepare order data
       const orderData = prepareOrderData();
-      console.log('Prepared order data:', orderData);
 
       // Step 2: Submit order for admin approval
       const result = await orderService.submitOrder(orderData);
       
       if (result.success) {
-        console.log('Order submitted successfully:', result.orderId);
         
         // Step 3: Navigate to order status page instead of payment
         if (isFullPage) {
@@ -142,14 +149,14 @@ const CheckoutConfirmation = ({ open, onClose, onConfirm }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [validate, prepareOrderData, isFullPage, navigate, onConfirm, name, email, phone]);
 
   // Render as full page if accessed via route
   if (isFullPage) {
     return (
-      <Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: 3 }}>
+      <Box sx={FULLPAGE_ROOT_SX}>
         <Container maxWidth="sm">
-          <Paper elevation={3} sx={{ borderRadius: 3, p: 4 }}>
+          <Paper elevation={3} sx={FULLPAGE_PAPER_SX}>
             {/* Header with Back Button */}
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
               <IconButton 
@@ -318,11 +325,7 @@ const CheckoutConfirmation = ({ open, onClose, onConfirm }) => {
       maxWidth="xs"
       fullWidth
       PaperProps={{
-        sx: { 
-          borderRadius: 3,
-          background: '#f8f5f0 url(https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80) center/cover',
-          backgroundBlendMode: 'overlay'
-        }
+        sx: MODAL_PAPER_SX
       }}
     >
       <DialogTitle sx={{ pb: 1, position: 'relative', zIndex: 2 }}>
@@ -472,4 +475,4 @@ const CheckoutConfirmation = ({ open, onClose, onConfirm }) => {
   );
 };
 
-export default CheckoutConfirmation;
+export default memo(CheckoutConfirmation);

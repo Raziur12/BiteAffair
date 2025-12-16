@@ -1,27 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
 import { Box } from '@mui/material';
-import { Navbar, Hero, Footer } from './components/layout';
+import { Navbar, Footer } from './components/layout';
 import { PartyPlatters } from './components/menu';
-import { About, Contact, Testimonials } from './components/sections';
 import { MenuErrorBoundary, FormErrorBoundary } from './components/common';
 import { CartProvider } from './context/CartContext';
 import { MENU_TYPES } from './utils/constants';
 import BookingFlow from './components/booking/BookingFlow';
-import PaymentPage from './components/booking/PaymentPage';
-import CartModal from './components/cart/CartModal';
-import CheckoutConfirmation from './components/cart/CheckoutConfirmation';
 import OrderStatus from './components/cart/OrderStatus';
-import OrderFlowManager from './components/order/OrderFlowManager';
+
+// Lazy-loaded sections and flows
+const Contact = lazy(() => import('./components/sections/Contact'));
+const OrderFlowManager = lazy(() => import('./components/order/OrderFlowManager'));
+const PaymentPage = lazy(() => import('./components/booking/PaymentPage'));
+const CheckoutConfirmation = lazy(() => import('./components/cart/CheckoutConfirmation'));
+const CartModal = lazy(() => import('./components/cart/CartModal'));
 
 const HomePage = ({ bookingConfig, selectedLocation }) => {
   const [cartOpen, setCartOpen] = useState(false);
   const location = useLocation();
 
   // Scroll to section based on URL
-  React.useEffect(() => {
+  useEffect(() => {
     const scrollToSection = () => {
       const path = location.pathname;
       let sectionId = '';
@@ -66,9 +66,6 @@ const HomePage = ({ bookingConfig, selectedLocation }) => {
     <>
       <Navbar selectedLocation={selectedLocation} />
       <Box component="main" sx={{ paddingTop: { xs: '92px', md: '48px' } }}>
-        <Box id="home">
-          <Hero />
-        </Box>
         <MenuErrorBoundary>
           <PartyPlatters 
             id="menu" 
@@ -76,26 +73,24 @@ const HomePage = ({ bookingConfig, selectedLocation }) => {
             onOpenCart={() => setCartOpen(true)}
           />
         </MenuErrorBoundary>
-        <Box id="about">
-          <About />
-        </Box>
-        <Box id="testimonials">
-          <Testimonials />
-        </Box>
         <FormErrorBoundary>
-          <Box id="contact">
-            <Contact />
-          </Box>
+          <Suspense fallback={null}>
+            <Box id="contact">
+              <Contact />
+            </Box>
+          </Suspense>
         </FormErrorBoundary>
       </Box>
       <Footer />
       
       {/* Order Flow Manager for Modal Flow */}
-      <OrderFlowManager 
-        cartOpen={cartOpen} 
-        onCartClose={() => setCartOpen(false)}
-        bookingConfig={bookingConfig}
-      />
+      <Suspense fallback={null}>
+        <OrderFlowManager 
+          cartOpen={cartOpen} 
+          onCartClose={() => setCartOpen(false)}
+          bookingConfig={bookingConfig}
+        />
+      </Suspense>
     </>
   );
 };
@@ -105,8 +100,6 @@ const App = () => {
   const [bookingConfig, setBookingConfig] = useState(() => {
     const saved = localStorage.getItem('biteAffairs_bookingConfig');
     const config = saved ? JSON.parse(saved) : null;
-    if (config) {
-    }
     return config;
   });
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -139,48 +132,23 @@ const App = () => {
     localStorage.removeItem('biteAffairs_bookingConfig');
   };
 
-  // Create a minimal theme that doesn't override text styles
-  const theme = createTheme({
-    palette: {
-      primary: {
-        main: '#1976d2',
-      },
-    },
-    components: {
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            fontWeight: 'normal',
-            textTransform: 'none',
-            borderRadius: '20px',
-            paddingX: '16px',
-            paddingY: '6px'
-          }
-        }
-      }
-    }
-  });
-
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <CartProvider>
-        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', width: '100%', overflowX: 'hidden' }}>
-          <Routes>
-            <Route path="/" element={<BookingFlow onComplete={handleBookingComplete} onLocationSelect={handleLocationSelect} />} />
-            <Route path="/bite-affair/home" element={<HomePage bookingConfig={bookingConfig} selectedLocation={selectedLocation} />} />
-            <Route path="/bite-affair/menu" element={<HomePage bookingConfig={bookingConfig} selectedLocation={selectedLocation} />} />
-            <Route path="/bite-affair/about" element={<HomePage bookingConfig={bookingConfig} selectedLocation={selectedLocation} />} />
-            <Route path="/bite-affair/testimonials" element={<HomePage bookingConfig={bookingConfig} selectedLocation={selectedLocation} />} />
-            <Route path="/bite-affair/contact" element={<HomePage bookingConfig={bookingConfig} selectedLocation={selectedLocation} />} />
-            <Route path="/bite-affair/cart" element={<CartModal open={true} />} />
-            <Route path="/bite-affair/checkout" element={<CheckoutConfirmation open={true} />} />
-            <Route path="/bite-affair/order-status/:orderId" element={<OrderStatus />} />
-            <Route path="/bite-affair/payment" element={<PaymentPage />} />
-          </Routes>
-        </Box>
-      </CartProvider>
-    </ThemeProvider>
+    <CartProvider>
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', width: '100%', overflowX: 'hidden' }}>
+        <Routes>
+          <Route path="/" element={<BookingFlow onComplete={handleBookingComplete} onLocationSelect={handleLocationSelect} />} />
+          <Route path="/bite-affair/home" element={<HomePage bookingConfig={bookingConfig} selectedLocation={selectedLocation} />} />
+          <Route path="/bite-affair/menu" element={<HomePage bookingConfig={bookingConfig} selectedLocation={selectedLocation} />} />
+          <Route path="/bite-affair/about" element={<HomePage bookingConfig={bookingConfig} selectedLocation={selectedLocation} />} />
+          <Route path="/bite-affair/testimonials" element={<HomePage bookingConfig={bookingConfig} selectedLocation={selectedLocation} />} />
+          <Route path="/bite-affair/contact" element={<HomePage bookingConfig={bookingConfig} selectedLocation={selectedLocation} />} />
+          <Route path="/bite-affair/cart" element={<Suspense fallback={null}><CartModal open={true} /></Suspense>} />
+          <Route path="/bite-affair/checkout" element={<Suspense fallback={null}><CheckoutConfirmation open={true} /></Suspense>} />
+          <Route path="/bite-affair/order-status/:orderId" element={<OrderStatus />} />
+          <Route path="/bite-affair/payment" element={<Suspense fallback={null}><PaymentPage /></Suspense>} />
+        </Routes>
+      </Box>
+    </CartProvider>
   );
 };
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, memo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,18 +8,19 @@ import {
 } from '@mui/material';
 import { CheckCircle } from '@mui/icons-material';
 
+// Hoisted static styles
+const PAPER_SX = { borderRadius: 2, p: 2 };
+
 const OrderSuccessModal = ({ open, onClose }) => {
+  const handleClose = useCallback(() => onClose && onClose(), [onClose]);
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       maxWidth="sm"
       fullWidth
       PaperProps={{
-        sx: {
-          borderRadius: 2,
-          p: 2
-        }
+        sx: PAPER_SX
       }}
     >
       <DialogContent sx={{ textAlign: 'center', p: 4 }}>
@@ -55,7 +56,7 @@ const OrderSuccessModal = ({ open, onClose }) => {
         <Button
           fullWidth
           variant="contained"
-          onClick={onClose}
+          onClick={handleClose}
           sx={{
             bgcolor: '#1a237e',
             py: 1.5,
@@ -73,4 +74,4 @@ const OrderSuccessModal = ({ open, onClose }) => {
   );
 };
 
-export default OrderSuccessModal;
+export default memo(OrderSuccessModal);

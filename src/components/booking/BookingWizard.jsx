@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Box, Container, Paper, IconButton } from '@mui/material';
-import { ArrowBack, Close } from '@mui/icons-material';
+import { ArrowBack } from '@mui/icons-material';
 import BookingStepper from './BookingStepper';
 import LocationStep from './LocationStep';
 import MealTypeStep from './MealTypeStep';
 
+const wizardSteps = ['Choose Location', 'Select Menu', 'Get Price', 'Payment'];
+
 const BookingWizard = ({ onComplete, onLocationSelect, initialStep = 0 }) => {
   const [activeStep, setActiveStep] = useState(initialStep);
-  const wizardSteps = ['Choose Location', 'Select Menu', 'Get Price', 'Payment'];
   const [bookingData, setBookingData] = useState({
     location: null,
     occasion: null,
@@ -70,14 +71,6 @@ const BookingWizard = ({ onComplete, onLocationSelect, initialStep = 0 }) => {
                 <ArrowBack />
               </IconButton>
             )}
-            {/* <IconButton 
-              onClick={() => console.log('Close wizard')} 
-              aria-label="Close" 
-              size="small"
-              sx={{ position: 'absolute', top: 2, right: 2, zIndex: 10 }}
-            >
-              <Close />
-            </IconButton> */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 0 }}>
               <img 
                 src="/logo/502068640_17845720176490350_3307957330610653706_n.jpg" 

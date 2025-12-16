@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -27,6 +27,15 @@ import {
 import { locationService } from '../../services/locationService';
 import { LOCATIONS } from '../../utils/constants';
 
+// Hoisted static nav items
+const NAV_ITEMS = [
+  { label: 'Home', href: '/bite-affair/home' },
+  { label: 'Menu', href: '/bite-affair/menu' },
+  { label: 'About', href: '/bite-affair/about' },
+  { label: 'Testimonials', href: '/bite-affair/testimonials' },
+  { label: 'Contact', href: '/bite-affair/contact' }
+];
+
 
 const Navbar = ({ selectedLocation: locationFromApp }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -37,30 +46,24 @@ const Navbar = ({ selectedLocation: locationFromApp }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
+  const handleDrawerToggle = useCallback(() => {
+    setMobileOpen(prev => !prev);
+  }, []);
 
-  const handleLocationSelect = (location) => {
+  const handleLocationSelect = useCallback((location) => {
     setSelectedLocation(location);
     locationService.saveLocation(location);
-  };
+  }, []);
 
-  const handleLocationChange = (event) => {
+  const handleLocationChange = useCallback((event) => {
     const locationName = event.target.value;
     const location = LOCATIONS.find(loc => loc.name === locationName);
     if (location) {
       handleLocationSelect(location);
     }
-  };
+  }, [handleLocationSelect]);
 
-  const navItems = [
-    { label: 'Home', href: '/bite-affair/home' },
-    { label: 'Menu', href: '/bite-affair/menu' },
-    { label: 'About', href: '/bite-affair/about' },
-    { label: 'Testimonials', href: '/bite-affair/testimonials' },
-    { label: 'Contact', href: '/bite-affair/contact' }
-  ];
+  const navItems = NAV_ITEMS;
 
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center', p: 2 }}>
@@ -283,4 +286,4 @@ const Navbar = ({ selectedLocation: locationFromApp }) => {
   );
 };
 
-export default Navbar;
+export default memo(Navbar);

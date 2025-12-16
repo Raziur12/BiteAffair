@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +28,9 @@ import {
 } from '@mui/icons-material';
 import { useCart } from '../../context/CartContext';
 
+// Hoisted static styles
+const DIALOG_PAPER_SX = { borderRadius: 2, maxHeight: '90vh' };
+
 const EnhancedCheckout = ({ open, onClose, onConfirm }) => {
   const { cartItems, updateItemQuantity, removeItem, getTotalPrice, clearCart } = useCart();
   const [currentStep, setCurrentStep] = useState('cart'); // 'cart', 'details', 'confirmation'
@@ -52,15 +55,15 @@ const EnhancedCheckout = ({ open, onClose, onConfirm }) => {
     }
   }, [open, cartItems]);
 
-  const handleItemToggle = (itemId) => {
+  const handleItemToggle = useCallback((itemId) => {
     setSelectedItems(prev => 
       prev.map(item => 
         item.id === itemId ? { ...item, selected: !item.selected } : item
       )
     );
-  };
+  }, []);
 
-  const handleQuantityChange = (itemId, newQuantity) => {
+  const handleQuantityChange = useCallback((itemId, newQuantity) => {
     if (newQuantity <= 0) {
       setSelectedItems(prev => prev.filter(item => item.id !== itemId));
       removeItem(itemId);
@@ -72,23 +75,23 @@ const EnhancedCheckout = ({ open, onClose, onConfirm }) => {
       );
       updateItemQuantity(itemId, newQuantity);
     }
-  };
+  }, [removeItem, updateItemQuantity]);
 
-  const getSelectedTotal = () => {
+  const selectedTotal = useMemo(() => {
     return selectedItems
       .filter(item => item.selected)
       .reduce((total, item) => total + (item.price * item.quantity), 0);
-  };
+  }, [selectedItems]);
 
-  const handleProceedToDetails = () => {
+  const handleProceedToDetails = useCallback(() => {
     setCurrentStep('details');
-  };
+  }, []);
 
-  const handleSubmitOrder = () => {
+  const handleSubmitOrder = useCallback(() => {
     const orderData = {
       items: selectedItems.filter(item => item.selected),
       customer: customerDetails,
-      total: getSelectedTotal(),
+      total: selectedTotal,
       timestamp: new Date().toISOString()
     };
     
@@ -99,7 +102,7 @@ const EnhancedCheckout = ({ open, onClose, onConfirm }) => {
     setTimeout(() => {
       onConfirm(orderData);
     }, 2000);
-  };
+  }, [selectedItems, customerDetails, selectedTotal, onConfirm]);
 
   const renderCartStep = () => (
     <Box>
@@ -189,7 +192,7 @@ const EnhancedCheckout = ({ open, onClose, onConfirm }) => {
             onClick={handleProceedToDetails}
             sx={{ mt: 2, py: 1.5 }}
           >
-            View Cart → ₹{getSelectedTotal()}
+            View Cart → ₹{selectedTotal}
           </Button>
         </>
       )}
@@ -283,10 +286,10 @@ const EnhancedCheckout = ({ open, onClose, onConfirm }) => {
       {/* Total */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 'bold', textAlign: 'center' }}>
-          Total: ₹{getSelectedTotal()}
+          Total: ₹{selectedTotal}
         </Typography>
         <Box sx={{ mt: 2 }}>
-          <Typography variant="body2">Subtotal: ₹{getSelectedTotal()}</Typography>
+          <Typography variant="body2">Subtotal: ₹{selectedTotal}</Typography>
           <Typography variant="body2">Delivery Charges: ₹XX</Typography>
           <Typography variant="body2">Packaging Charges: ₹XX</Typography>
           <Typography variant="body2">Tax (Products @5%): ₹XXX</Typography>
@@ -419,7 +422,7 @@ const EnhancedCheckout = ({ open, onClose, onConfirm }) => {
       maxWidth="sm"
       fullWidth
       PaperProps={{
-        sx: { borderRadius: 2, maxHeight: '90vh' }
+        sx: DIALOG_PAPER_SX
       }}
     >
       <DialogContent sx={{ p: 3 }}>
@@ -431,4 +434,4 @@ const EnhancedCheckout = ({ open, onClose, onConfirm }) => {
   );
 };
 
-export default EnhancedCheckout;
+export default memo(EnhancedCheckout);

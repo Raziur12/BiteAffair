@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import {
   Box,
   Card,
@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 
 // Menu Item Skeleton
-export const MenuItemSkeleton = () => (
+export const MenuItemSkeleton = memo(() => (
   <Card sx={{ height: '100%', borderRadius: 2 }}>
     <Skeleton variant="rectangular" height={120} />
     <CardContent sx={{ p: 2 }}>
@@ -20,10 +20,10 @@ export const MenuItemSkeleton = () => (
       </Box>
     </CardContent>
   </Card>
-);
+));
 
 // Menu Grid Skeleton
-export const MenuGridSkeleton = ({ count = 8 }) => (
+export const MenuGridSkeleton = memo(({ count = 8 }) => (
   <Grid container spacing={2}>
     {Array.from({ length: count }).map((_, index) => (
       <Grid item xs={6} sm={6} md={4} lg={3} key={index}>
@@ -31,10 +31,10 @@ export const MenuGridSkeleton = ({ count = 8 }) => (
       </Grid>
     ))}
   </Grid>
-);
+));
 
 // Contact Form Skeleton
-export const ContactFormSkeleton = () => (
+export const ContactFormSkeleton = memo(() => (
   <Box>
     <Skeleton variant="text" sx={{ fontSize: '2rem', mb: 3, width: '60%' }} />
     <Grid container spacing={3}>
@@ -58,10 +58,10 @@ export const ContactFormSkeleton = () => (
       </Grid>
     </Grid>
   </Box>
-);
+));
 
 // Testimonial Card Skeleton
-export const TestimonialSkeleton = () => (
+export const TestimonialSkeleton = memo(() => (
   <Card sx={{ height: '100%', p: 3 }}>
     <CardContent sx={{ p: 0 }}>
       <Skeleton variant="rectangular" width={80} height={20} sx={{ mb: 2 }} />
@@ -78,10 +78,10 @@ export const TestimonialSkeleton = () => (
       </Box>
     </CardContent>
   </Card>
-);
+));
 
 // Enhanced Loading Spinner with Animation
-export const EnhancedLoader = ({ message = "Loading..." }) => (
+export const EnhancedLoader = memo(({ message = "Loading..." }) => (
   <Box
     sx={{
       display: 'flex',
@@ -111,7 +111,7 @@ export const EnhancedLoader = ({ message = "Loading..." }) => (
       <Skeleton variant="text" sx={{ fontSize: '0.9rem', width: 200, mx: 'auto' }} />
     </Box>
   </Box>
-);
+));
 
 export default {
   MenuItemSkeleton,
