@@ -164,49 +164,6 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
   }, [guestCount]);
 
 
-  // Load services and testimonials data
-  useEffect(() => {
-    try {
-      const componentData = customizationMenuService.getComponentData(guestCount);
-
-      if (componentData.services && componentData.services.length > 0) {
-        setServices(componentData.services);
-      } else {
-        // Fallback services data
-        setServices([
-          {
-            id: 1,
-            title: 'Professional Chefs',
-            description: 'Experienced chefs who specialize in authentic Indian cuisine.',
-            image: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-            calculatedPrice: Math.ceil(500 * (parseInt(guestCount.veg) + parseInt(guestCount.nonVeg) + parseInt(guestCount.jain || 0)) / 10),
-            rating: 4.8
-          }
-        ]);
-      }
-
-      if (componentData.testimonials && componentData.testimonials.length > 0) {
-        setTestimonials(componentData.testimonials);
-      } else {
-        // Fallback testimonials data
-        setTestimonials([
-          {
-            id: 1,
-            name: 'Priya Sharma',
-            rating: 5,
-            comment: 'Amazing food quality and excellent service!',
-            avatar: 'PS'
-          }
-        ]);
-      }
-
-      // Preload common menu item images for better performance
-      const commonItems = ['paneer', 'tikka', 'kabab', 'rice', 'naan', 'dal'];
-      customizationMenuService.preloadImages(commonItems);
-    } catch (error) {
-      console.error('❌ PartyPlatters: Error loading static data:', error);
-    }
-  }, [guestCount]);
 
   const baseMenuOptions = [
     { value: 'jain', label: 'Jain Menu' },

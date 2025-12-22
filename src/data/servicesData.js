@@ -19,7 +19,7 @@ export const recommendedAddOns = [
     description: 'Refreshing dinner with premium ingredients',
     rating: '4.8 ⭐',
     price: '80',
-    image: '/src/assets/Images/AddOnsImage/RefreshedDinner.jpg'
+    image: '/Images/AddOnsImage/RefreshedDinner.jpg'
   },
   {
     id: 'addon2', 
@@ -27,7 +27,7 @@ export const recommendedAddOns = [
     description: 'Traditional spicy chutney blend',
     rating: '4.8 ⭐',
     price: '90',
-    image: '/src/assets/Images/AddOnsImage/SpicyChutney.jpg'
+    image: '/Images/AddOnsImage/SpicyChutney.jpg'
   }
 ];
 
