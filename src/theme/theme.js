@@ -42,9 +42,11 @@ const theme = createTheme({
     },
   },
   typography: {
+    //  fontFamily: '"Playfair Display", serif',
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
-      fontFamily: '"Playfair Display", serif',
+      //  fontFamily: '"Playfair Display", serif',
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
       fontWeight: 700,
       fontSize: '3.5rem',
       lineHeight: 1.2,
@@ -53,7 +55,8 @@ const theme = createTheme({
       },
     },
     h2: {
-      fontFamily: '"Playfair Display", serif',
+      //  fontFamily: '"Playfair Display", serif',
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
       fontWeight: 600,
       fontSize: '2.75rem',
       lineHeight: 1.3,
@@ -62,7 +65,8 @@ const theme = createTheme({
       },
     },
     h3: {
-      fontFamily: '"Playfair Display", serif',
+      //  fontFamily: '"Playfair Display", serif',
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
       fontWeight: 600,
       fontSize: '2.25rem',
       lineHeight: 1.3,
@@ -71,19 +75,22 @@ const theme = createTheme({
       },
     },
     h4: {
-      fontFamily: '"Playfair Display", serif',
+      //  fontFamily: '"Playfair Display", serif',
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
       fontWeight: 600,
       fontSize: '1.875rem',
       lineHeight: 1.4,
     },
     h5: {
-      fontFamily: '"Playfair Display", serif',
+      //  fontFamily: '"Playfair Display", serif',
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
       fontWeight: 600,
       fontSize: '1.5rem',
       lineHeight: 1.4,
     },
     h6: {
-      fontFamily: '"Playfair Display", serif',
+      //  fontFamily: '"Playfair Display", serif',
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
       fontWeight: 600,
       fontSize: '1.25rem',
       lineHeight: 1.4,
