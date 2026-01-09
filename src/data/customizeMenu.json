@@ -1,0 +1,179 @@
+{
+    "nonVegMenu": {
+        "name": "NON-VEG MENU",
+        "categories": {
+            "starters": [
+                {
+                    "name": "Tandoori Prawns",
+                    "portionSize": "2PCS",
+                    "pricePerPortion": "130 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Chili Chicken",
+                    "portionSize": "2PCS",
+                    "pricePerPortion": "90 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Chicken fingers",
+                    "portionSize": "2PCS",
+                    "pricePerPortion": "90 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Kung pao chicken",
+                    "portionSize": "2PCS",
+                    "pricePerPortion": "130 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Fish fingers",
+                    "portionSize": "2PCS",
+                    "pricePerPortion": "100 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Fish Otak Otak",
+                    "portionSize": "2PCS",
+                    "pricePerPortion": "140 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Chilli garlic prawns",
+                    "portionSize": "2PCS",
+                    "pricePerPortion": "130 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Chilli oil (crystal Dimsums)",
+                    "portionSize": "2PCS",
+                    "pricePerPortion": "120 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Chicken spring roll",
+                    "portionSize": "2PCS",
+                    "pricePerPortion": "120 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Chicken momos",
+                    "portionSize": "2PCS",
+                    "pricePerPortion": "70 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Chicken nuggets",
+                    "portionSize": "2PCS",
+                    "pricePerPortion": "90 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                }
+            ],
+            "mainCourse": [
+                {
+                    "name": "Kadhai chicken",
+                    "portionSize": "100 GM",
+                    "pricePerPortion": "130 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Chicken do pyaza",
+                    "portionSize": "100 GM",
+                    "pricePerPortion": "140 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Fish curry",
+                    "portionSize": "100 GM",
+                    "pricePerPortion": "175 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Chicken Curry",
+                    "portionSize": "100 GM",
+                    "pricePerPortion": "130 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Chicken Rogan josh",
+                    "portionSize": "100 GM",
+                    "pricePerPortion": "130 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Chicken korma",
+                    "portionSize": "100 GM",
+                    "pricePerPortion": "130 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Afgani Chicken",
+                    "portionSize": "100 GM",
+                    "pricePerPortion": "140 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Chicken tikka masala",
+                    "portionSize": "100 GM",
+                    "pricePerPortion": "130 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Mutton rogan josh",
+                    "portionSize": "100 GM",
+                    "pricePerPortion": "200 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Handi mutton",
+                    "portionSize": "100 GM",
+                    "pricePerPortion": "200 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Mutton curry",
+                    "portionSize": "100 GM",
+                    "pricePerPortion": "200 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Malabari Fish Curry",
+                    "portionSize": "100 GM",
+                    "pricePerPortion": "200 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Chicken Noodles",
+                    "portionSize": "75 GM",
+                    "pricePerPortion": "110 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Chicken fried rice",
+                    "portionSize": "100 GM",
+                    "pricePerPortion": "100 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Chicken Manchurian",
+                    "portionSize": "75 GM",
+                    "pricePerPortion": "110 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Chicken Pasta - Red/Pink/White",
+                    "portionSize": "100 GM",
+                    "pricePerPortion": "120 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Chicken biryani",
+                    "portionSize": "100 GM",
+                    "pricePerPortion": "120 RS",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,236 @@
+{
+    "standardMenuVeg": {
+        "name": "STANDARD Menu Veg",
+        "price": 499,
+        "includes": {
+            "starters": 3,
+            "mainCourse": 3,
+            "rice": 1,
+            "breads": 2,
+            "dessert": 1,
+            "raitaAndSalad": true
+        },
+        "quantityFor": {
+            "pax": 20
+        },
+        "items": {
+            "mainCourse": [
+                {
+                    "name": "Dal Makhani",
+                    "quantity": 2,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Dal Tadka",
+                    "quantity": 2,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Amritsari Chole",
+                    "quantity": 2,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Hakka Noodles",
+                    "quantity": 1.5,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Veg Manchurian",
+                    "quantity": 1.5,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Pasta - Red/White/Pink",
+                    "quantity": 2,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Pao Bhaaji",
+                    "quantity": 2,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg",
+                    "extra": {
+                        "quantity": 30,
+                        "unit": "pc"
+                    }
+                },
+                {
+                    "name": "Peas Pulao",
+                    "quantity": 2,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                }
+            ]
+        }
+    },
+    "premiumMenuVeg": {
+        "name": "PREMIUM Menu Veg",
+        "price": 499,
+        "includes": {
+            "starters": 3,
+            "mainCourse": 3,
+            "rice": 1,
+            "breads": 2,
+            "dessert": 1,
+            "raitaAndSalad": true
+        },
+        "quantityFor": {
+            "pax": 20
+        },
+        "items": {
+            "starters": [
+                {
+                    "name": "Chilli mushroom",
+                    "quantity": 50,
+                    "unit": "pc",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Hara Bhara Kabab",
+                    "quantity": 40,
+                    "unit": "pc",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Dahi ke Kabab",
+                    "quantity": 40,
+                    "unit": "pc",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"   
+                },
+                {
+                    "name": "Spring Rolls",
+                    "quantity": 40,
+                    "unit": "pc",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Spicy veg (crystal dimsum)",
+                    "quantity": 40,
+                    "unit": "pc",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Cocktail samosa",
+                    "quantity": 40,
+                    "unit": "pc",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Cottage cheese satay",
+                    "quantity": 40,
+                    "unit": "pc",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                }
+            ],
+            "mainCourse": [
+                {
+                    "name": "Mix veg",
+                    "quantity": 1.5,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Matar mushroom",
+                    "quantity": 1.5,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Methi matar malai",
+                    "quantity": 2,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Aloo Gobhi Adraki",
+                    "quantity": 1.5,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Soya Chaap Masala",
+                    "quantity": 2,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Dal Makhani",
+                    "quantity": 2,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Dal jodhpuri",
+                    "quantity": 2,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Amritsari Chole",
+                    "quantity": 2,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Hakka Noodles",
+                    "quantity": 1.5,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Veg Manchurian",
+                    "quantity": 1.5,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Veggies in hot garlic",
+                    "quantity": 1.5,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Veg Thai curry",
+                    "quantity": 2,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Pasta - Red/White/Pink",
+                    "quantity": 2,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Pao Bhaaji",
+                    "quantity": 2,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg",
+                    "extra": {
+                        "quantity": 30,
+                        "unit": "pc"
+                    }
+                },
+                {
+                    "name": "Shahi pulao",
+                    "quantity": 2,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                },
+                {
+                    "name": "Veg pulao",
+                    "quantity": 2,
+                    "unit": "kg",
+                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                }
+            ]
+        }
+    }
+}
