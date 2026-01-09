@@ -10,7 +10,7 @@ const Footer = () => {
       sx={{
         bgcolor: 'black',
         color: 'white',
-        py: 3
+        py: 2
       }}
     >
       <Container

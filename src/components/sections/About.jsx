@@ -64,16 +64,16 @@ const About = () => {
   const theme = useTheme();
 
   return (
-    <Box id="about" sx={{ py: 8, bgcolor: 'grey.50' }}>
+    <Box id="about" sx={{ mt: -3, pt: 3, pb: 2, bgcolor: 'grey.50' }}>
       <Container maxWidth="xl">
         {/* Header */}
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
+        <Box sx={{ textAlign: 'center', mb: 3 }}>
           <Typography
             variant="h2"
             sx={{
               fontWeight: 'normal',
               color: 'text.primary',
-              mb: 2,
+              mb: 1,
               fontSize: '2rem'
             }}
           >
@@ -94,7 +94,7 @@ const About = () => {
         </Box>
 
         {/* Stats */}
-        <Grid container spacing={4} sx={{ mb: 8 }}>
+        <Grid container spacing={4} sx={{ mb: 5 }}>
           {STATS.map((stat, index) => (
             <Grid item xs={6} md={3} key={index}>
               <Box sx={{ textAlign: 'center' }}>

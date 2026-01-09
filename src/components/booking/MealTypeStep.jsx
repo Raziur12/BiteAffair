@@ -120,7 +120,8 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
         variant="h4" 
         sx={{ 
           fontWeight: 'bold', 
-          mb: { xs: 1, sm: 2 },
+          mt: { xs: -0.5, sm: -0.75 },
+          mb: { xs: 0.25, sm: 0.5 },
           fontSize: { xs: '1.3rem', sm: '2rem' }
         }}
       >
@@ -130,9 +131,10 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
       {/* Meal Type Selection */}
       <Grid 
         container 
-        spacing={{ xs: 1, sm: 1, md: 1.5 }} 
+        spacing={{ xs: 0.75, sm: 0.75, md: 1 }} 
         sx={{ 
-          mb: { xs: 1.5, sm: 3 },
+          mt: { xs: -0.25, sm: -0.25 },
+          mb: { xs: 1, sm: 1.75 },
           flex: '0 0 auto',
           justifyContent: { xs: 'flex-start', sm: 'center', md: 'center' },
           maxWidth: { sm: '600px', md: '700px' },
@@ -140,7 +142,7 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
         }}
       >
         {MEAL_TYPES.map((meal) => (
-          <Grid item xs={6} sm={4} md={4} key={meal.id}>
+          <Grid item xs={4} sm={3} md={3} key={meal.id}>
             <Card
               variant="outlined"
               sx={{
@@ -149,7 +151,8 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
                 borderWidth: 2,
                 mx: 'auto',
                 transition: 'all 0.2s ease-in-out',
-                height: { xs: '60px', sm: '100px' },
+                height: { xs: '54px', sm: '84px' },
+                maxWidth: { xs: 110, sm: 170 },
                 '&:hover': {
                   transform: 'scale(1.02)',
                   boxShadow: 2
@@ -159,7 +162,7 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
               <CardActionArea 
                 onClick={() => handleMealTypeSelect(meal)} 
                 sx={{ 
-                  p: { xs: 1.5, sm: 3 },
+                  p: { xs: 1, sm: 2 },
                   height: '100%',
                   display: 'flex',
                   alignItems: 'center',
@@ -171,7 +174,7 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
                     variant="h4" 
                     sx={{ 
                       mb: { xs: 0.5, sm: 1 },
-                      fontSize: { xs: '1.5rem', sm: '2rem' }
+                      fontSize: { xs: '1.25rem', sm: '1.75rem' }
                     }}
                   >
                     {meal.icon}
@@ -180,7 +183,7 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
                     variant="h6" 
                     sx={{ 
                       fontWeight: 'medium',
-                      fontSize: { xs: '0.8rem', sm: '1.125rem' },
+                      fontSize: { xs: '0.75rem', sm: '1rem' },
                       lineHeight: 1.2
                     }}
                   >
@@ -198,7 +201,7 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
         variant="h4" 
         sx={{ 
           fontWeight: 'bold', 
-          mb: { xs: 1, sm: 2 },
+          mb: { xs: 0.75, sm: 1.25 },
           fontSize: { xs: '1.2rem', sm: '2rem' }
         }}
       >
@@ -209,7 +212,7 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
       {/* Guest Count Controls - Show for all meal types */}
       {(selectedMealType === 'veg' || selectedMealType === 'veg_nonveg' || selectedMealType === 'jain') && (
         <Box sx={{ 
-          mb: { xs: 1.5, sm: 3 },
+          mb: { xs: 1, sm: 1.75 },
           px: { xs: 2, sm: 4 },
           flex: '0 0 auto'
         }}>
@@ -502,7 +505,7 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
       )}
 
       {/* See Packages Button */}
-      <Box sx={{ mt: 'auto', pt: { xs: 2, sm: 0 } }}>
+      <Box sx={{ mt: 'auto', pt: { xs: 1, sm: 0 } }}>
         <Button
           variant="contained"
           onClick={handleProceed}
@@ -510,7 +513,7 @@ const MealTypeStep = ({ onNext, updateBookingData, initialGuestCount }) => {
           sx={{
             bgcolor: '#1e3a8a',
             color: 'white',
-            py: { xs: 1.5, sm: 2 },
+            py: { xs: 1.2, sm: 1.5 },
             px: { xs: 4, sm: 6 },
             fontSize: { xs: '1rem', sm: '1.1rem' },
             fontWeight: 600,

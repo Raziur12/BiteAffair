@@ -100,16 +100,16 @@ const Contact = () => {
   const businessHours = BUSINESS_HOURS;
 
   return (
-    <Box id="contact" sx={{ pt: 2, pb: 8, bgcolor: 'grey.50' }}>
+    <Box id="contact" sx={{ pt: 1, pb: 2, bgcolor: 'grey.50' }}>
       <Container maxWidth="xl">
         {/* Header */}
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
+        <Box sx={{ textAlign: 'center', mb: 2 }}>
           <Typography
             variant="h2"
             sx={{
               fontWeight: 'bold',
               color: 'text.primary',
-              mb: 2,
+              // mb: 1,
               fontSize: '2rem'
             }}
           >
@@ -128,7 +128,7 @@ const Contact = () => {
           </Typography>
         </Box>
 
-        <Grid container spacing={6}>
+        <Grid container spacing={4}>
           {/* Contact Form */}
           <Grid item xs={12} lg={7}>
             <Card sx={{ p: 4 }}>

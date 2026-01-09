@@ -7,8 +7,8 @@ const CustomStepIconRoot = styled('div')(({ theme, ownerState }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : '#e0e0e0',
   zIndex: 1,
   color: theme.palette.mode === 'dark' ? '#fff' : '#757575',
-  width: 40,
-  height: 40,
+  width: 38,
+  height: 38,
   display: 'flex',
   borderRadius: '50%',
   justifyContent: 'center',
@@ -33,22 +33,22 @@ const CustomStepIcon = React.memo(function CustomStepIcon(props) {
   const { active, completed, className } = props;
 
   const icons = {
-    1: <LocationOn sx={{ fontSize: 24 }} />,
-    2: <Restaurant sx={{ fontSize: 24 }} />,
-    3: <CurrencyRupee sx={{ fontSize: 24 }} />,
-    4: <CreditCard sx={{ fontSize: 24 }} />,
+    1: <LocationOn sx={{ fontSize: 22 }} />,
+    2: <Restaurant sx={{ fontSize: 22 }} />,
+    3: <CurrencyRupee sx={{ fontSize: 22 }} />,
+    4: <CreditCard sx={{ fontSize: 22 }} />,
   };
 
   return (
     <CustomStepIconRoot ownerState={{ completed, active }} className={className}>
-      {icons[String(props.icon)] || <CreditCard sx={{ fontSize: 24 }} />}
+      {icons[String(props.icon)] || <CreditCard sx={{ fontSize: 22 }} />}
     </CustomStepIconRoot>
   );
 });
 
 const BookingStepper = React.memo(({ activeStep, steps }) => {
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 }, textAlign: 'center', bgcolor: 'white' }}>
+    <Box sx={{ px: { xs: 1, sm: 1.5 }, py: { xs: 1.5, sm: 1.5 }, textAlign: 'center', bgcolor: 'white' }}>
       <Stepper 
         activeStep={activeStep} 
         alternativeLabel 
@@ -60,7 +60,7 @@ const BookingStepper = React.memo(({ activeStep, steps }) => {
             padding: 0,
           },
           '& .MuiStepConnector-root': {
-            top: 20,
+            top: 17,
             left: 'calc(-50% + 20px)',
             right: 'calc(50% + 20px)',
           },
@@ -73,11 +73,13 @@ const BookingStepper = React.memo(({ activeStep, steps }) => {
             flexDirection: 'column',
             alignItems: 'center',
             '& .MuiStepLabel-labelContainer': {
-              marginTop: '8px',
+              marginTop: '2px',
               '& .MuiStepLabel-label': {
                 fontSize: '0.875rem',
                 fontWeight: 500,
                 color: '#333',
+                lineHeight: 1.1,
+                marginTop: 0,
               }
             }
           }

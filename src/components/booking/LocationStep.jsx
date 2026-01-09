@@ -151,7 +151,7 @@ const LocationStep = ({ onNext, updateBookingData, onLocationSelect }) => {
         variant="body1" 
         color="text.secondary" 
         sx={{ 
-          mb: { xs: 1.5, sm: 2.5 },
+          mb: { xs: 0.5, sm: 1 },
           fontSize: { xs: '0.875rem', sm: '1rem' }
         }}
       >
@@ -159,7 +159,7 @@ const LocationStep = ({ onNext, updateBookingData, onLocationSelect }) => {
       </Typography>
       <Grid 
         container 
-        spacing={{ xs: 1.5, sm: 1, md: 1.5 }} 
+        spacing={{ xs: 1, sm: 1, md: 1.25 }} 
         sx={{ 
           flex: 1,
           alignContent: 'flex-start',
@@ -189,7 +189,7 @@ const LocationStep = ({ onNext, updateBookingData, onLocationSelect }) => {
                 borderWidth: selectedLocation === location.id ? 3 : 1,
                 transform: selectedLocation === location.id ? 'scale(1.02)' : 'none',
                 transition: 'all 0.2s ease-in-out',
-                height: { xs: '100px', sm: '100px', md: '100px' },
+                height: { xs: '92px', sm: '96px', md: '96px' },
                 width: { xs: '130px', md: '130px' },
                 backgroundColor: selectedLocation === location.id ? 'rgba(255, 152, 0, 0.05)' : 'transparent',
                 '&:hover': {
@@ -237,12 +237,12 @@ const LocationStep = ({ onNext, updateBookingData, onLocationSelect }) => {
 
       {/* Occasion Date & Time Section */}
       {showDateTime && (
-        <Box sx={{ mt: 4, textAlign: 'center' }}>
+        <Box sx={{ mt: 2, textAlign: 'center' }}>
           <Typography 
             variant="h5" 
             sx={{ 
               fontWeight: 'bold', 
-              mb: 3,
+              mb: 1.75,
               fontSize: { xs: '1.25rem', sm: '1.5rem' }
             }}
           >
@@ -255,7 +255,7 @@ const LocationStep = ({ onNext, updateBookingData, onLocationSelect }) => {
             gap: 2, 
             justifyContent: 'center',
             flexDirection: { xs: 'column', sm: 'row' },
-            mb: 3
+            mb: 1.75
           }}>
             {/* Date Picker */}
             <TextField
@@ -323,7 +323,7 @@ const LocationStep = ({ onNext, updateBookingData, onLocationSelect }) => {
               variant="contained"
               onClick={handleDateTimeSubmit}
               sx={{ 
-                py: 1.5,
+                py: 1.2,
                 px: 4,
                 fontSize: '1.1rem',
                 fontWeight: 'bold',

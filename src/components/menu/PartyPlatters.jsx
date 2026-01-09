@@ -54,12 +54,13 @@ import EnhancedCheckout from '../cart/EnhancedCheckout';
 import { MenuGridSkeleton, EnhancedLoader, MenuLoadError, EmptyState } from '../common';
 import { menuDataService } from '../../services/menuDataService';
 import { customizationMenuService } from '../../services/customizationMenuService';
+import cocktailPartyMenuData from '../../data/cocktailPartyMenu.json';
+import packagesMenuData from '../../data/packagesMenu.json';
 
 const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
   const navigate = useNavigate();
   const routerLocation = useLocation();
   const { addItem, getItemQuantity, totalItems, items: cartItems, removeItem: removeFromCart, updateQuantity } = useCart();
-
 
   // State declarations - MUST be before useEffect hooks
   const [searchQuery, setSearchQuery] = useState('');
@@ -113,6 +114,7 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
   const userEditRef = useRef(false);
   const lastUserEditAt = useRef(0);
   const initializedFromBookingRef = useRef(false);
+  const menuUserOverrideRef = useRef(false);
   const [syncTrigger, setSyncTrigger] = useState(0);
 
   // Preload common item images once to improve perceived performance
@@ -282,6 +284,154 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
         } else {
           throw new Error(vegMenuResult.error || 'Failed to load Veg menu data');
         }
+      } else if (selectedMenu === 'packages') {
+        const toTitleCase = (value) => {
+          const str = String(value || '').trim();
+          if (!str) return str;
+          return str.charAt(0).toUpperCase() + str.slice(1);
+        };
+
+        const pax = parseInt(numberOfPax) || 20;
+        const entries = packagesMenuData && typeof packagesMenuData === 'object'
+          ? Object.entries(packagesMenuData)
+          : [];
+
+        const packageItems = entries
+          .filter(([, pkg]) => pkg && typeof pkg === 'object')
+          .map(([key, pkg], idx) => {
+            const pkgPax = parseInt(pkg?.quantityFor?.pax) || pax;
+            const pricePerGuest = parseFloat(pkg?.price) || 0;
+
+            const includes = pkg?.includes || {};
+            const includesText = Object.keys(includes).length
+              ? Object.entries(includes)
+                  .map(([k, v]) => `${toTitleCase(k)}: ${v === true ? 'Yes' : v}`)
+                  .join(' | ')
+              : '';
+
+            return {
+              id: `package_${key}_${idx}`,
+              title: pkg?.name || key,
+              name: pkg?.name || key,
+              category: 'main_course',
+              description: includesText,
+              isVeg: true,
+              isNonVeg: false,
+              price: pricePerGuest,
+              calculatedPrice: pricePerGuest,
+              basePrice: pricePerGuest,
+              serves: pkgPax,
+              packagePax: pkgPax,
+              packageKey: key,
+              packageIncludes: pkg?.includes,
+              packageItems: pkg?.items,
+              portion_size: `${pkgPax} pax`,
+              calculatedQuantity: `${pkgPax} pax`
+            };
+          });
+
+        formattedData = {
+          items: packageItems,
+          categories: [...new Set(packageItems.map(item => item.category))],
+          totalItems: packageItems.length
+        };
+      } else if (selectedMenu === 'cocktail') {
+        const cocktailRoot = cocktailPartyMenuData?.cocktailPartyMenu;
+        const categories = cocktailRoot?.categories;
+
+        if (!categories || typeof categories !== 'object') {
+          throw new Error('Failed to load Cocktail Party menu data');
+        }
+
+        const nonVegKeywords = ['chicken', 'mutton', 'fish', 'prawn', 'egg', 'meat', 'beef', 'pork', 'lamb', 'seekh'];
+        const parsePricePerPortion = (value) => {
+          const str = String(value ?? '');
+          const match = str.match(/[0-9]+(?:\.[0-9]+)?/);
+          return match ? Number(match[0]) : 0;
+        };
+
+        const scalePortionForGuests = (portionSize, serves) => {
+          const raw = String(portionSize ?? '').trim();
+          if (!raw) return '';
+
+          const parts = raw.split('+').map(p => p.trim()).filter(Boolean);
+          const scaled = parts.map((part) => {
+            const numMatch = part.match(/[0-9]+(?:\.[0-9]+)?/);
+            const baseAmount = numMatch ? Number(numMatch[0]) : 0;
+            const unit = /GM/i.test(part) ? 'GM' : 'PCS';
+
+            const total = baseAmount * (Number(serves) || 0);
+            const formatted = Number.isInteger(total) ? total : total.toFixed(1);
+            return `${formatted}${unit}`;
+          });
+
+          return scaled.join(' + ');
+        };
+
+        const totalGuests = (guestCount?.veg || 0) + (guestCount?.nonVeg || 0) + (guestCount?.jain || 0);
+        const getServesForItem = (itemCategory, isNonVeg) => {
+          if (itemCategory === 'desserts' || itemCategory === 'dessert' || itemCategory === 'breads') {
+            return totalGuests;
+          }
+          return isNonVeg ? (guestCount?.nonVeg || 0) : (guestCount?.veg || 0);
+        };
+
+        let idCounter = 1;
+        const mapCocktailItems = (items, itemCategory, forcedDiet = null) => {
+          if (!Array.isArray(items)) return [];
+
+          return items
+            .filter(Boolean)
+            .map((entry) => {
+              const name = entry?.name;
+              if (!name) return null;
+
+              const inferredNonVeg = nonVegKeywords.some(k => String(name).toLowerCase().includes(k));
+              const isNonVeg = forcedDiet === 'nonVeg' ? true : forcedDiet === 'veg' ? false : inferredNonVeg;
+              const isVeg = !isNonVeg;
+              const serves = getServesForItem(itemCategory, isNonVeg);
+              const basePrice = parsePricePerPortion(entry?.pricePerPortion);
+
+              const baseItem = {
+                id: `cocktail_${idCounter++}`,
+                title: name,
+                name,
+                category: itemCategory,
+                portionSize: entry?.portionSize,
+                pricePerPortion: basePrice ? `₹${basePrice}` : entry?.pricePerPortion,
+                basePrice,
+                isVeg,
+                isNonVeg,
+                serves
+              };
+
+              const portion = scalePortionForGuests(entry?.portionSize, serves) || customizationMenuService.calculatePortionForGuests(baseItem, serves);
+              const price = customizationMenuService.calculatePriceForGuests(baseItem, serves);
+
+              return {
+                ...baseItem,
+                portion_size: portion,
+                calculatedQuantity: portion,
+                price,
+                calculatedPrice: price,
+                guestCount: serves
+              };
+            })
+            .filter(Boolean);
+        };
+
+        const cocktailItems = [
+          ...mapCocktailItems(categories.vegStarters, 'starters', 'veg'),
+          ...mapCocktailItems(categories.nonVegStarters, 'starters', 'nonVeg'),
+          ...mapCocktailItems(categories.mainsVegAndNonVeg, 'main_course'),
+          ...mapCocktailItems(categories.desserts, 'desserts')
+        ];
+
+        formattedData = {
+          items: cocktailItems,
+          categories: [...new Set(cocktailItems.map(item => item.category))],
+          totalItems: cocktailItems.length
+        };
       } else {
         // Use customizationMenuService for other menus (customized, nonveg, etc.)
         let menuType = 'all';
@@ -316,7 +466,7 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
 
   useEffect(() => {
     loadMenuData();
-  }, [selectedMenu, vegMenuType, guestCount]);
+  }, [selectedMenu, vegMenuType, guestCount, numberOfPax]);
 
   // When coming from cart Edit link, auto-open VegPackageModal
   useEffect(() => {
@@ -344,10 +494,14 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
 
   // Update selected menu when booking config changes
   useEffect(() => {
-    if (bookingConfig?.menu && bookingConfig.menu !== selectedMenu) {
+    if (!bookingConfig?.menu) return;
+    // If user manually changed dropdown, do not override their choice.
+    if (menuUserOverrideRef.current) return;
+
+    if (bookingConfig.menu !== selectedMenu) {
       setSelectedMenu(bookingConfig.menu);
     }
-  }, [bookingConfig]);
+  }, [bookingConfig?.menu, selectedMenu]);
 
   // Update veg/non-veg filters based on selected menu
   useEffect(() => {
@@ -563,6 +717,24 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
 
   // Handle adding item to cart
   const handleAddToCart = (item) => {
+    if (selectedMenu === 'packages') {
+      const pax = parseInt(item?.packagePax || item?.serves || numberOfPax) || 20;
+      const perGuestPrice = parseFloat(item?.price || item?.calculatedPrice || item?.basePrice) || 0;
+
+      const packageCartItem = {
+        ...item,
+        id: `${item.id}_${Date.now()}`,
+        quantity: pax,
+        serves: pax,
+        calculatedQuantity: `${pax} pax`,
+        price: perGuestPrice,
+        calculatedPrice: perGuestPrice
+      };
+
+      addItem(packageCartItem);
+      return;
+    }
+
     if (selectedMenu === 'veg') {
       // For Veg menu, detect package type from item and set vegMenuType accordingly
       if (item.packageType) {
@@ -773,7 +945,7 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
   return (
     <Box id={id} sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', width: '100%', overflowX: 'hidden' }}>
 
-      <Container maxWidth="lg" sx={{ py: { xs: 3, sm: 4, md: 5 }, px: { xs: 1, sm: 2 }, width: '100%', maxWidth: '100%' }}>
+      <Container maxWidth="lg" sx={{ pt: { xs: 2, sm: 3, md: 4 }, pb: { xs: 1, sm: 1, md: 2 }, px: { xs: .5, sm: 1 }, width: '100%', maxWidth: '100%' }}>
 
         {/* Search Bar and Menu Dropdown in Same Row */}
         <Box sx={{ mb: 1, display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}>
@@ -826,7 +998,10 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
             <FormControl size="small" sx={{ width: '100%' }}>
               <Select
                 value={selectedMenu}
-                onChange={(e) => setSelectedMenu(e.target.value)}
+                onChange={(e) => {
+                  menuUserOverrideRef.current = true;
+                  setSelectedMenu(e.target.value);
+                }}
                 displayEmpty
                 sx={{
                   bgcolor: bookingConfig?.menu === selectedMenu ? '#e3f2fd' : 'white',
