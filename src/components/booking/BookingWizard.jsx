@@ -18,6 +18,8 @@ const BookingWizard = ({ onComplete, onLocationSelect, initialStep = 0 }) => {
     guestCount: 5,
   });
 
+  const desktopContainerWidth = activeStep === 1 ? '680px' : '820px';
+
   const handleNext = () => {
     // If the current step is the Select Menu step (index 1), call onComplete for now
     if (activeStep === 1) {
@@ -58,7 +60,14 @@ const BookingWizard = ({ onComplete, onLocationSelect, initialStep = 0 }) => {
 
   return (
     <Box sx={{ bgcolor: '#1e3a8a', py: 1, pt: 1, minHeight: '100vh' }}>
-      <Container maxWidth="md">
+      <Container
+        maxWidth="md"
+        sx={{
+          '@media (min-width:900px)': {
+            maxWidth: desktopContainerWidth,
+          },
+        }}
+      >
         <Paper elevation={12} sx={{ borderRadius: 4, overflow: 'hidden', mt: 1 }}>
           <Box sx={{ position: 'relative', p: 0, py: 0 }}>
             {activeStep > 0 && (
@@ -84,7 +93,7 @@ const BookingWizard = ({ onComplete, onLocationSelect, initialStep = 0 }) => {
             </Box>
           </Box>
           <BookingStepper activeStep={activeStep} steps={wizardSteps} />
-          <Box sx={{ px: { xs: 1.25, sm: 2 }, pt: 0.5, pb: { xs: 1, sm: 1.5 } }}>
+          <Box sx={{ px: { xs: 1.25, sm: 2, md: 1.25 }, pt: 0.5, pb: { xs: 1, sm: 1.5 } }}>
             {steps[activeStep].component}
           </Box>
         </Paper>
