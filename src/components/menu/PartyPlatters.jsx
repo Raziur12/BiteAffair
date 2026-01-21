@@ -149,20 +149,29 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
     if (initializedFromBookingRef.current) return;
 
     const extractedGuestCount = {
-      veg: Math.max(0, Number.isFinite(bookingConfig.vegCount) ? bookingConfig.vegCount : 10),
-      nonVeg: Math.max(0, Number.isFinite(bookingConfig.nonVegCount) ? bookingConfig.nonVegCount : 5),
-      jain: Math.max(0, Number.isFinite(bookingConfig.jainCount) ? bookingConfig.jainCount : 5)
+      veg: Math.max(5, Number.isFinite(bookingConfig.vegCount) ? bookingConfig.vegCount : 10),
+      nonVeg: Math.max(5, Number.isFinite(bookingConfig.nonVegCount) ? bookingConfig.nonVegCount : 5),
+      jain: Math.max(5, Number.isFinite(bookingConfig.jainCount) ? bookingConfig.jainCount : 5)
     };
     setGuestCount(extractedGuestCount);
     initializedFromBookingRef.current = true;
   }, [bookingConfig]);
 
   const packageGuestCount = useMemo(() => {
-    if (bookingConfig?.menu === 'jain') return Number(guestCount?.jain || 0);
-    if (bookingConfig?.menu === 'veg') return Number(guestCount?.veg || 0);
-    if (bookingConfig?.menu === 'customized') return Number(guestCount?.veg || 0) + Number(guestCount?.nonVeg || 0);
+    // Package Menu should follow Meal Type selection counts, except when Meal Type is Jain
+    // (in that case, other menus including Package should default to 5).
+    if (selectedMenu === 'packages') {
+      if (bookingConfig?.menu === 'jain') return 5;
+      if (bookingConfig?.menu === 'veg') return Number(guestCount?.veg || 0);
+      if (bookingConfig?.menu === 'customized') return Number(guestCount?.veg || 0) + Number(guestCount?.nonVeg || 0);
+      return Number(guestCount?.veg || 0) + Number(guestCount?.nonVeg || 0) + Number(guestCount?.jain || 0);
+    }
+
+    if (selectedMenu === 'jain') return Number(guestCount?.jain || 0);
+    if (selectedMenu === 'veg') return Number(guestCount?.veg || 0);
+    if (selectedMenu === 'customized') return Number(guestCount?.veg || 0) + Number(guestCount?.nonVeg || 0);
     return Number(guestCount?.veg || 0) + Number(guestCount?.nonVeg || 0) + Number(guestCount?.jain || 0);
-  }, [bookingConfig?.menu, guestCount]);
+  }, [bookingConfig?.menu, guestCount, selectedMenu]);
 
   // Persist guest count so it survives page refresh
   useEffect(() => {
