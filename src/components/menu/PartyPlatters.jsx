@@ -274,6 +274,27 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
         // Handle Veg menu packages (Standard/Premium)
         const packageType = vegMenuType === 'premium' ? 'premium' : 'standard';
         const vegMenuResult = await menuDataService.getMenuData('veg', packageType, guestCount);
+        const vegGuests = Math.max(5, Number(guestCount?.veg || 5));
+        const perGuestPrice = 499;
+        const scalePortionForGuests = (portionSize, baseServes, targetServes) => {
+          const raw = String(portionSize ?? '').trim();
+          if (!raw) return '';
+
+          const parts = raw.split('+').map(p => p.trim()).filter(Boolean);
+          const scaledParts = parts.map((part) => {
+            const numMatch = part.match(/[0-9]+(?:\.[0-9]+)?/);
+            const baseAmount = numMatch ? Number(numMatch[0]) : 0;
+            const unitMatch = part.replace(/[0-9.\s]/g, '');
+            const unit = unitMatch || (part.toLowerCase().includes('kg') ? 'KG' : part.toLowerCase().includes('gm') ? 'GM' : 'PC');
+
+            const basis = Number(baseServes) || 1;
+            const scaled = basis > 0 ? (baseAmount / basis) * (Number(targetServes) || 0) : 0;
+            const formatted = Number.isInteger(scaled) ? scaled : Number(scaled.toFixed(2));
+            return `${formatted}${unit}`;
+          });
+
+          return scaledParts.join(' + ');
+        };
         
         if (vegMenuResult.success && vegMenuResult.data) {
           const vegMenuData = Array.isArray(vegMenuResult.data) ? vegMenuResult.data : vegMenuResult.data.items || [];
@@ -284,12 +305,13 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
               ...item,
               name: item.title || item.name,
               isVeg: true,
-              // Fixed package pricing - no guest count calculations
-              price: item.basePrice || 499,
-              calculatedPrice: item.basePrice || 499,
-              serves: item.serves || 20,
+              price: perGuestPrice,
+              basePrice: perGuestPrice,
+              calculatedPrice: perGuestPrice * vegGuests,
+              serves: vegGuests,
               quantity: item.quantity || item.portionSize,
-              portion_size: item.portionSize || item.quantity,
+              portion_size: scalePortionForGuests((item.portionSize || item.quantity), item.serves || 20, vegGuests) || (item.portionSize || item.quantity),
+              calculatedQuantity: scalePortionForGuests((item.portionSize || item.quantity), item.serves || 20, vegGuests) || (item.portionSize || item.quantity),
               packageType: packageType,
               isPackageItem: true
             })),
