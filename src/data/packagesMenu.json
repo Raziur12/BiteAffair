@@ -16,10 +16,10 @@
         "items": {
             "mainCourse": [
                 {
-                    "name": "Dal Makhani",
-                    "quantity": 2,
-                    "unit": "kg",
-                    "image": "/Images/MianVegMenu/18Soya Chaap Masala.jpg"
+                    "name": "Package",
+                    "quantity": 1,
+                    "unit": "set",
+                    "image": "/Images/Packages/Package.png"
                 },
                 {
                     "name": "Dal Tadka",

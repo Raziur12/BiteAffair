@@ -39,6 +39,16 @@ const ItemCustomizationModal = ({
   const [serves, setServes] = useState(10);
   const [quantity, setQuantity] = useState('XX pcs');
 
+  const isPackageMenuItem = Boolean(item?.packageKey || item?.packageIncludes);
+
+  const getPackageIncludedCount = (pkgItem) => {
+    const includes = pkgItem?.packageIncludes;
+    if (!includes || typeof includes !== 'object') return 0;
+    return Object.values(includes)
+      .filter((v) => typeof v === 'number' && Number.isFinite(v))
+      .reduce((sum, v) => sum + v, 0);
+  };
+
   // Helper function to get service count based on item type
   const getServiceCountForItem = (item) => {
     if (!item) return guestCount?.veg || 10;
@@ -60,6 +70,14 @@ const ItemCustomizationModal = ({
   // Reset values when modal opens
   useEffect(() => {
     if (open && item) {
+      if (isPackageMenuItem) {
+        const totalGuests = (guestCount?.veg || 0) + (guestCount?.nonVeg || 0) + (guestCount?.jain || 0);
+        setServes(totalGuests || 1);
+        const includedCount = getPackageIncludedCount(item);
+        const scaledCount = includedCount && totalGuests ? includedCount * totalGuests : includedCount;
+        setQuantity(scaledCount ? String(scaledCount) : '');
+        return;
+      }
       // For Breads and Desserts, the `serves` is the total guest count
       if (item.category === 'breads' || item.category === 'desserts') {
         const totalGuests = (guestCount?.veg || 0) + (guestCount?.nonVeg || 0) + (guestCount?.jain || 0);
@@ -71,10 +89,33 @@ const ItemCustomizationModal = ({
       }
       setQuantity(item.portion_size || item.calculatedQuantity || 'XX pcs');
     }
-  }, [open, item, guestCount]);
+  }, [open, item, guestCount, isPackageMenuItem]);
 
   const handleAddToCart = useCallback(() => {
     if (!item) return;
+
+    if (isPackageMenuItem) {
+      const pax = Math.max(1, parseInt(serves) || 1);
+      const perGuestPrice = parseFloat(item?.price || item?.calculatedPrice || item?.basePrice) || 0;
+
+      const packageCartItem = {
+        ...item,
+        id: `${item.id}_${Date.now()}`,
+        quantity: pax,
+        serves: pax,
+        calculatedQuantity: `${pax} pax`,
+        price: perGuestPrice,
+        calculatedPrice: perGuestPrice,
+        customizations: {
+          serves: pax,
+          quantity: quantity
+        }
+      };
+
+      onAddToCart(packageCartItem);
+      onClose();
+      return;
+    }
     
     // Determine serves/guest count for this item
     const effectiveServes = item.serves || serves || getServiceCountForItem(item);
@@ -101,7 +142,7 @@ const ItemCustomizationModal = ({
     
     onAddToCart(customizedItem);
     onClose();
-  }, [item, serves, quantity, onAddToCart, onClose]);
+  }, [item, serves, quantity, onAddToCart, onClose, isPackageMenuItem]);
 
   if (!item) return null;
 
@@ -194,6 +235,7 @@ const ItemCustomizationModal = ({
               <IconButton
                 size="small"
                 onClick={() => setServes(Math.max(1, serves - 1))}
+                disabled={isPackageMenuItem}
                 sx={{ p: 0.5 }}
               >
                 <Remove sx={{ fontSize: 16 }} />
@@ -204,6 +246,7 @@ const ItemCustomizationModal = ({
               <IconButton
                 size="small"
                 onClick={() => setServes(serves + 1)}
+                disabled={isPackageMenuItem}
                 sx={{ p: 0.5 }}
               >
                 <Add sx={{ fontSize: 16 }} />
@@ -224,6 +267,7 @@ const ItemCustomizationModal = ({
                   const newNum = Math.max(1, currentNum - 1);
                   setQuantity(`${newNum} pcs`);
                 }}
+                disabled={isPackageMenuItem}
                 sx={{ p: 0.5 }}
               >
                 <Remove sx={{ fontSize: 16 }} />
@@ -238,6 +282,7 @@ const ItemCustomizationModal = ({
                   const newNum = currentNum + 1;
                   setQuantity(`${newNum} pcs`);
                 }}
+                disabled={isPackageMenuItem}
                 sx={{ p: 0.5 }}
               >
                 <Add sx={{ fontSize: 16 }} />

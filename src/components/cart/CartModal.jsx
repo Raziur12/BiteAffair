@@ -356,11 +356,25 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
   const mappedItems = useMemo(() => {
     return (items || []).map((item) => {
       const isBreadOrDessert = item.category === 'breads' || item.category === 'desserts';
-      const displayServes = isBreadOrDessert ? item.serves : item.quantity;
+      const isPackageMenuItem = Boolean(item.packageKey || item.packageIncludes);
+      const totalGuests = (guestCount?.veg || 0) + (guestCount?.nonVeg || 0) + (guestCount?.jain || 0);
+      const displayServes = isPackageMenuItem
+        ? (totalGuests || Number(item.quantity) || 1)
+        : (isBreadOrDessert ? item.serves : item.quantity);
 
       // Derive quantity text dynamically to stay in sync with serves changes
       const computeQuantityText = () => {
         if (item.isAddon) return item.quantity;
+        if (isPackageMenuItem) {
+          const includes = item.packageIncludes;
+          if (includes && typeof includes === 'object') {
+            const sum = Object.values(includes)
+              .filter((v) => typeof v === 'number' && Number.isFinite(v))
+              .reduce((acc, v) => acc + v, 0);
+            if (sum) return String(sum * (Number(displayServes) || 0));
+          }
+          return '1';
+        }
         // Prefer dynamic recompute for PCS/GM using per-serve derivation
         const qtySource = (typeof item.portion_size === 'string' && /PCS|GM/i.test(item.portion_size))
           ? item.portion_size
@@ -399,7 +413,7 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
         _lineTotal: lineTotal
       };
     });
-  }, [items]);
+  }, [items, guestCount]);
 
   // Render as modal with new design
   return (
@@ -579,8 +593,29 @@ const CartModal = ({ open, onClose, onCheckout, bookingConfig, guestCount, onGue
                           Serves: {displayServes} | Quantity: {quantityText}
                         </Typography>
 
+                        {(item.packageKey || item.packageIncludes) && (
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ fontSize: '0.75rem', display: 'block', mt: 0.5 }}
+                          >
+                            {(() => {
+                              const toTitleCase = (value) => {
+                                const str = String(value || '').trim();
+                                if (!str) return str;
+                                return str.charAt(0).toUpperCase() + str.slice(1);
+                              };
+                              const includes = item.packageIncludes;
+                              if (!includes || typeof includes !== 'object') return '';
+                              return Object.entries(includes)
+                                .map(([k, v]) => `${toTitleCase(k)}: ${v === true ? 'Yes' : v}`)
+                                .join(' | ');
+                            })()}
+                          </Typography>
+                        )}
+
                         {/* Edit link for Jain/Customized items (non-package) */}
-                        {!item.isAddon && (
+                        {!item.isAddon && !(item.packageKey || item.packageIncludes) && (
                           <Typography
                             variant="caption"
                             onClick={() => {

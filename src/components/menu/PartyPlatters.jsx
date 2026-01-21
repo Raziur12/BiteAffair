@@ -149,13 +149,20 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
     if (initializedFromBookingRef.current) return;
 
     const extractedGuestCount = {
-      veg: Math.max(5, bookingConfig.vegCount || 10),
-      nonVeg: Math.max(5, bookingConfig.nonVegCount || 5),
-      jain: Math.max(5, bookingConfig.jainCount || 5)
+      veg: Math.max(0, Number.isFinite(bookingConfig.vegCount) ? bookingConfig.vegCount : 10),
+      nonVeg: Math.max(0, Number.isFinite(bookingConfig.nonVegCount) ? bookingConfig.nonVegCount : 5),
+      jain: Math.max(0, Number.isFinite(bookingConfig.jainCount) ? bookingConfig.jainCount : 5)
     };
     setGuestCount(extractedGuestCount);
     initializedFromBookingRef.current = true;
   }, [bookingConfig]);
+
+  const packageGuestCount = useMemo(() => {
+    if (bookingConfig?.menu === 'jain') return Number(guestCount?.jain || 0);
+    if (bookingConfig?.menu === 'veg') return Number(guestCount?.veg || 0);
+    if (bookingConfig?.menu === 'customized') return Number(guestCount?.veg || 0) + Number(guestCount?.nonVeg || 0);
+    return Number(guestCount?.veg || 0) + Number(guestCount?.nonVeg || 0) + Number(guestCount?.jain || 0);
+  }, [bookingConfig?.menu, guestCount]);
 
   // Persist guest count so it survives page refresh
   useEffect(() => {
@@ -302,6 +309,16 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
             const pkgPax = parseInt(pkg?.quantityFor?.pax) || pax;
             const pricePerGuest = parseFloat(pkg?.price) || 0;
 
+            const totalGuests = packageGuestCount || pkgPax;
+
+            const pkgItems = pkg?.items;
+            const primaryImage =
+              pkgItems?.mainCourse?.[0]?.image ||
+              pkgItems?.starters?.[0]?.image ||
+              pkgItems?.breads?.[0]?.image ||
+              pkgItems?.desserts?.[0]?.image ||
+              pkgItems?.dessert?.[0]?.image;
+
             const includes = pkg?.includes || {};
             const includesText = Object.keys(includes).length
               ? Object.entries(includes)
@@ -309,24 +326,33 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
                   .join(' | ')
               : '';
 
+            const totalIncludedItems = Object.values(includes)
+              .filter((v) => typeof v === 'number' && Number.isFinite(v))
+              .reduce((sum, v) => sum + v, 0);
+
+            const scaledIncludedItems = totalIncludedItems && totalGuests
+              ? totalIncludedItems * totalGuests
+              : 0;
+
             return {
               id: `package_${key}_${idx}`,
               title: pkg?.name || key,
               name: pkg?.name || key,
               category: 'main_course',
               description: includesText,
+              image: primaryImage,
               isVeg: true,
               isNonVeg: false,
               price: pricePerGuest,
               calculatedPrice: pricePerGuest,
               basePrice: pricePerGuest,
-              serves: pkgPax,
+              serves: totalGuests || pkgPax,
               packagePax: pkgPax,
               packageKey: key,
               packageIncludes: pkg?.includes,
               packageItems: pkg?.items,
-              portion_size: `${pkgPax} pax`,
-              calculatedQuantity: `${pkgPax} pax`
+              portion_size: scaledIncludedItems ? String(scaledIncludedItems) : (totalIncludedItems ? String(totalIncludedItems) : `${pkgPax} pax`),
+              calculatedQuantity: scaledIncludedItems ? String(scaledIncludedItems) : (totalIncludedItems ? String(totalIncludedItems) : `${pkgPax} pax`)
             };
           });
 
@@ -516,9 +542,12 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
         setVegFilter(true);
         setNonVegFilter(false);
         break;
+      case 'packages':
+        setVegFilter(true);
+        setNonVegFilter(false);
+        break;
       case 'customized':
       case 'cocktail':
-      case 'packages':
         // These menus allow both veg and non-veg options
         // Set filters based on guest count from booking
         if (bookingConfig) {
@@ -718,20 +747,8 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
   // Handle adding item to cart
   const handleAddToCart = (item) => {
     if (selectedMenu === 'packages') {
-      const pax = parseInt(item?.packagePax || item?.serves || numberOfPax) || 20;
-      const perGuestPrice = parseFloat(item?.price || item?.calculatedPrice || item?.basePrice) || 0;
-
-      const packageCartItem = {
-        ...item,
-        id: `${item.id}_${Date.now()}`,
-        quantity: pax,
-        serves: pax,
-        calculatedQuantity: `${pax} pax`,
-        price: perGuestPrice,
-        calculatedPrice: perGuestPrice
-      };
-
-      addItem(packageCartItem);
+      setSelectedItem(item);
+      setCustomizationModalOpen(true);
       return;
     }
 
@@ -806,6 +823,9 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
       // Skip addons and breads/desserts
       if (item.isAddon || item.category === 'breads' || item.category === 'desserts') return;
 
+      // Skip Package Menu items (their cart quantity/pricing is pax-based)
+      if (item.packageKey || item.packageIncludes) return;
+
       // Match items by guest type
       const isTarget =
         (type === 'jain' && (item.isJain || selectedMenu === 'jain')) ||
@@ -872,6 +892,11 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
     cartItems.forEach(item => {
       // Skip addons and breads/desserts
       if (item.isAddon || item.category === 'breads' || item.category === 'desserts') {
+        return;
+      }
+
+      // Skip Package Menu items (their cart quantity/pricing is pax-based)
+      if (item.packageKey || item.packageIncludes) {
         return;
       }
 
@@ -1000,6 +1025,9 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
                 value={selectedMenu}
                 onChange={(e) => {
                   menuUserOverrideRef.current = true;
+                  setSelectedCategory('All');
+                  setCollapsedSections({});
+                  setMenuData({ items: [], categories: [] });
                   setSelectedMenu(e.target.value);
                 }}
                 displayEmpty
@@ -1069,7 +1097,7 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
             outline: 'none'
           }}>
             {/* Veg/Non-Veg Toggles - Hide for Jain and Veg menu */}
-            {selectedMenu !== 'jain' && selectedMenu !== 'veg' && (
+            {selectedMenu !== 'jain' && selectedMenu !== 'veg' && selectedMenu !== 'packages' && (
               <>
                 {/* Veg Toggle */}
                 <FormControlLabel
@@ -1342,7 +1370,20 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
                 <IconButton
                   size="small"
                   onClick={() => {
-                    if (selectedMenu === 'jain') {
+                    if (selectedMenu === 'packages') {
+                      setGuestCount(prev => {
+                        if (bookingConfig?.menu === 'jain') {
+                          const next = Math.max(5, parseInt(prev.jain || 0) - 1);
+                          return { ...prev, jain: next };
+                        }
+                        if (bookingConfig?.menu === 'customized') {
+                          const next = Math.max(5, parseInt(prev.veg || 0) - 1);
+                          return { ...prev, veg: next };
+                        }
+                        const next = Math.max(5, parseInt(prev.veg || 0) - 1);
+                        return { ...prev, veg: next };
+                      });
+                    } else if (selectedMenu === 'jain') {
                       setGuestCount(prev => ({ 
                         ...prev, 
                         jain: Math.max(5, parseInt(prev.jain || prev.veg) - 1),
@@ -1357,12 +1398,28 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
                   <Remove sx={{ fontSize: 12 }} />
                 </IconButton>
                 <Typography variant="body2" sx={{ fontSize: '0.75rem', fontWeight: 'bold', minWidth: 20, textAlign: 'center' }}>
-                  {selectedMenu === 'jain' ? (guestCount.jain || guestCount.veg) : guestCount.veg}
+                  {selectedMenu === 'packages'
+                    ? packageGuestCount
+                    : (selectedMenu === 'jain' ? (guestCount.jain || guestCount.veg) : guestCount.veg)
+                  }
                 </Typography>
                 <IconButton
                   size="small"
                   onClick={() => {
-                    if (selectedMenu === 'jain') {
+                    if (selectedMenu === 'packages') {
+                      setGuestCount(prev => {
+                        if (bookingConfig?.menu === 'jain') {
+                          const next = parseInt(prev.jain || 0) + 1;
+                          return { ...prev, jain: next };
+                        }
+                        if (bookingConfig?.menu === 'customized') {
+                          const next = parseInt(prev.veg || 0) + 1;
+                          return { ...prev, veg: next };
+                        }
+                        const next = parseInt(prev.veg || 0) + 1;
+                        return { ...prev, veg: next };
+                      });
+                    } else if (selectedMenu === 'jain') {
                       setGuestCount(prev => {
                         const newCount = { 
                           ...prev, 
@@ -1386,7 +1443,7 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
             </Box>
 
             {/* No of Pax (Non Veg) - Hide for Jain and Veg menu */}
-            {selectedMenu !== 'jain' && selectedMenu !== 'veg' && (
+            {selectedMenu !== 'jain' && selectedMenu !== 'veg' && selectedMenu !== 'packages' && (
               <Box sx={{
                 display: 'flex',
                 alignItems: 'center',
@@ -1868,7 +1925,10 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
                                         fontSize: '1.2rem'
                                       }}
                                     >
-                                      ₹{item.calculatedPrice || item.price || item.basePrice || 87}
+                                      ₹{selectedMenu === 'packages'
+                                        ? (Number(item.calculatedPrice || item.price || item.basePrice || 0) * Number(item.serves || 0))
+                                        : (item.calculatedPrice || item.price || item.basePrice || 87)
+                                      }
                                     </Typography>
                                     <Button
                                       variant="outlined"
