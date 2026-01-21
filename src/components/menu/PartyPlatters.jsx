@@ -558,20 +558,17 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
       case 'customized':
       case 'cocktail':
         // These menus allow both veg and non-veg options
-        // Set filters based on guest count from booking
-        if (bookingConfig) {
-          setVegFilter(bookingConfig.vegCount > 0);
-          setNonVegFilter(bookingConfig.nonVegCount > 0);
-        } else {
-          // Default to both if no booking config
-          setVegFilter(true);
-          setNonVegFilter(true);
-        }
+        // Default both ON; user can toggle on/off
+        setVegFilter(true);
+        setNonVegFilter(true);
         break;
       default:
+        // Default - show all
+        setVegFilter(true);
+        setNonVegFilter(true);
         break;
     }
-  }, [selectedMenu, bookingConfig]);
+  }, [selectedMenu]);
 
   // Get all items from all categories with proper filtering
   const getAllItems = () => {
@@ -1036,6 +1033,8 @@ const PartyPlatters = ({ id, onOpenCart, bookingConfig }) => {
                   menuUserOverrideRef.current = true;
                   setSelectedCategory('All');
                   setCollapsedSections({});
+                  setError(null);
+                  setLoading(true);
                   setMenuData({ items: [], categories: [] });
                   setSelectedMenu(e.target.value);
                 }}
